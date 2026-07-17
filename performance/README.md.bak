@@ -45,10 +45,7 @@ Poor performance can result in:
 
 ```text
 performance/
-├── static-allocation/
 ├── memory-pool/
-├── event-driven/
+├── static-allocation/
 ├── rtos/
-└── efficient-scheduling/
-
-
+└── event-driven/

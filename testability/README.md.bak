@@ -26,6 +26,13 @@ If software is difficult to test, defects become harder to detect and diagnose.
 - Layered Testing
 - Logging and Tracing
 
+## Coming Soon
+
+- Unit Testing Examples
+- Integration Testing
+- UML Diagrams
+- C++ Implementations
+
 ---
 
 ## Planned Topics
@@ -37,10 +44,6 @@ testability/
 ├── layered-testing/
 └── logging-tracing/
 
-## Coming Soon
 
-- Unit Testing Examples
-- Integration Testing
-- UML Diagrams
-- C++ Implementations
+
 

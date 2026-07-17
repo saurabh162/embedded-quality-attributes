@@ -28,10 +28,10 @@ without impacting existing functionality.
 
 ## Design Techniques Covered
 
-- Plugin Architecture
 - Publish-Subscribe
-
-
+- Plugin Architecture
+- Event Bus
+- Modular Design
 
 ## Coming Soon
 
@@ -45,5 +45,6 @@ without impacting existing functionality.
 
 ```text
 scalability/
+├── pub-sub/
 ├── plugin-architecture/
-└── pub-sub/
+└── modular-design/
