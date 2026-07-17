@@ -37,11 +37,10 @@ testability/
 ├── layered-testing/
 └── logging-tracing/
 
----
-
-##  Coming Soon
+## Coming Soon
 
 - Unit Testing Examples
 - Integration Testing
 - UML Diagrams
 - C++ Implementations
+
