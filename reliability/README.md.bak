@@ -81,7 +81,7 @@ Building a resilient embedded architecture.
 
 ## Repository Structure
 
-```text
+
 reliability/
 ├── README.md
 ├── hal/
