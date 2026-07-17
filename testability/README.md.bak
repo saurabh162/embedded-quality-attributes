@@ -21,8 +21,6 @@ If software is difficult to test, defects become harder to detect and diagnose.
 ## Design Techniques Covered
 
 - Dependency Injection
-- Mocking
-- Fakes
 - Layered Testing
 - Logging and Tracing
 
@@ -40,7 +38,6 @@ If software is difficult to test, defects become harder to detect and diagnose.
 ```text
 testability/
 ├── dependency-injection/
-├── mocking/
 ├── layered-testing/
 └── logging-tracing/
 
