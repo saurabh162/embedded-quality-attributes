@@ -35,12 +35,11 @@ If software is difficult to test, defects become harder to detect and diagnose.
 
 ## Planned Topics
 
-```text
 testability/
 ├── dependency-injection/
 ├── layered-testing/
 └── logging-tracing/
-```
+
 
 
 
