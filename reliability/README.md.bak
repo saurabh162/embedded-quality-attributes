@@ -44,4 +44,10 @@ Reliability is not achieved through testing alone—it must be designed into the
 
 ---
 
-## Repository Structure
+## Planned Topics
+
+```text 
+reliability /
+├── hal/
+├── retry-pattern/
+└── watchdog-pattern/

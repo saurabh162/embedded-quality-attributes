@@ -43,7 +43,6 @@ Poor performance can result in:
 
 ## Planned Topics
 
-```text
 performance/
 ├── static-allocation/
 ├── memory-pool/

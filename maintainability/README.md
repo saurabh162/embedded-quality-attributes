@@ -40,7 +40,7 @@ Engineers should be able to introduce changes without creating unintended side e
 
 ## Planned Topics
 
-```text
+
 maintainability/
 ├── seperation-of-concern/
 ├── open-close-principle

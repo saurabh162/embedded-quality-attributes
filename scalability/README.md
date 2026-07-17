@@ -43,7 +43,7 @@ without impacting existing functionality.
 
 ## Planned Topics
 
-```text
+
 scalability/
 ├── plugin-architecture/
 └── pub-sub/

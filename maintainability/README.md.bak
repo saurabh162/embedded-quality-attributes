@@ -42,7 +42,8 @@ Engineers should be able to introduce changes without creating unintended side e
 
 ```text
 maintainability/
-├── solid/
+├── seperation-of-concern/
+├── open-close-principle
 ├── layered-architecture/
 ├── strategy-pattern/
 └── factory-pattern/
