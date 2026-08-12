@@ -111,3 +111,13 @@ Application logic becomes tightly coupled to the hardware implementation.
 When one side changes, the other side is often affected.
 
 ## Reliability Risk Summary
+## Reliability Risk Summary
+
+| Risk | Effect |
+|--------|----------|
+| Sensor replacement | Application modifications required |
+| New MCU platform | Driver and application updates |
+| Hardware fault simulation | Difficult |
+| Unit testing | Hardware dependent |
+| Maintenance effort | High |
+| Regression risk | High |
