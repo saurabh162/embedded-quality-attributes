@@ -44,3 +44,20 @@ Initially, the system uses a **TMP36 temperature sensor**. The application direc
 +--------------------+
 |      Hardware      |
 +--------------------+
+
+At first glance, this design looks simple and works correctly.
+
+However, after deployment, several situations may occur:
+
+- TMP36 sensor becomes obsolete
+- Customer requests a different sensor
+- New hardware platform is selected
+- Software team wants to perform unit testing on a PC
+- Engineers want to simulate sensor failures
+- Production team finds a hardware-related bug
+
+All of these changes directly affect the application because it depends on a specific hardware driver.
+
+## Example Scenario
+
+Assume the monitoring application contains code like this:
