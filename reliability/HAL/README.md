@@ -30,21 +30,13 @@ Initially, the system uses a **TMP36 temperature sensor**. The application direc
 
 ### Initial Design
 
-```text
-+--------------------+
-| TemperatureMonitor |
-+--------------------+
-          |
-          v
-+--------------------+
-|    TMP36 Driver    |
-+--------------------+
-          |
-          v
-+--------------------+
-|      Hardware      |
-+--------------------+
+### Initial Design
 
+```mermaid
+graph TD
+    A[Temperature Monitor] --> B[TMP36 Driver]
+    B --> C[Hardware]
+```
 
 At first glance, this design looks simple and works correctly.
 
@@ -57,9 +49,11 @@ However, after deployment, several situations may occur:
 - Engineers want to simulate sensor failures
 - Production team finds a hardware-related bug
 
-All of these changes directly affect the application because it depends on a specific hardware driver.
-
 ## Example Scenario
 
 Assume the monitoring application contains code like this:
+
+```cpp
+float temperature = tmp36Driver.readTemperature();
+```
 
