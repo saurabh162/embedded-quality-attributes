@@ -56,4 +56,58 @@ Assume the monitoring application contains code like this:
 ```cpp
 float temperature = tmp36Driver.readTemperature();
 ```
+A year later, marketing decides to replace TMP36 with a digital sensor such as TMP117.
 
+Now every module that directly uses `tmp36Driver` must be modified and retested.
+
+Even a small hardware change can create:
+
+- Additional development effort
+- Higher regression testing cost
+- Increased risk of software defects
+- Longer release cycles
+
+## Impact on Reliability
+
+Direct hardware dependency reduces system reliability because:
+
+### 1. Difficult Fault Injection
+
+It becomes hard to simulate:
+
+- Sensor disconnection
+- Invalid readings
+- Noise
+- Hardware failures
+
+Without simulation capability, many failure scenarios remain untested.
+
+### 2. Limited Unit Testing
+
+Application code cannot easily run without actual hardware.
+
+Developers often need:
+
+- Evaluation boards
+- Hardware setups
+- Real sensors
+
+for even basic testing.
+
+### 3. High Change Impact
+
+A sensor replacement may force changes across multiple software modules.
+
+More modified code means:
+
+- More regression testing
+- Higher defect probability
+- Lower maintainability
+
+### 4. Tight Coupling
+
+Application logic becomes tightly coupled to the hardware implementation.
+
+When one side changes, the other side is often affected.
+
+## Reliability Risk Summary
