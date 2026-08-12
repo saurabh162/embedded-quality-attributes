@@ -26,7 +26,7 @@ The device has three main responsibilities:
 - Display temperature to the operator
 - Send temperature measurements to a supervisory system
 
-Initially, the system uses a **TMP36 temperature sensor**. The application directly communicates with the TMP36 driver to obtain temperature readings. 【1-fe0023】
+Initially, the system uses a **TMP36 temperature sensor**. The application directly communicates with the TMP36 driver to obtain temperature readings.
 
 ### Initial Design
 
