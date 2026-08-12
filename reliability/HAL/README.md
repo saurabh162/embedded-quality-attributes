@@ -45,6 +45,7 @@ Initially, the system uses a **TMP36 temperature sensor**. The application direc
 |      Hardware      |
 +--------------------+
 
+
 At first glance, this design looks simple and works correctly.
 
 However, after deployment, several situations may occur:
@@ -61,3 +62,4 @@ All of these changes directly affect the application because it depends on a spe
 ## Example Scenario
 
 Assume the monitoring application contains code like this:
+
