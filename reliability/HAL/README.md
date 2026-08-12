@@ -14,6 +14,8 @@
 
 ## 7. Trade-offs ⚖️
 
+
+
 ## 1. Real Problem 🚨
 
 ### Problem Description
