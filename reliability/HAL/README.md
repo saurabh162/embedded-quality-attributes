@@ -30,8 +30,6 @@ Initially, the system uses a **TMP36 temperature sensor**. The application direc
 
 ### Initial Design
 
-### Initial Design
-
 ```mermaid
 graph TD
     A[Temperature Monitor] --> B[TMP36 Driver]
