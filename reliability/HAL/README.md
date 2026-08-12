@@ -111,7 +111,6 @@ Application logic becomes tightly coupled to the hardware implementation.
 When one side changes, the other side is often affected.
 
 ## Reliability Risk Summary
-## Reliability Risk Summary
 
 | Risk | Effect |
 |--------|----------|
@@ -121,3 +120,11 @@ When one side changes, the other side is often affected.
 | Unit testing | Hardware dependent |
 | Maintenance effort | High |
 | Regression risk | High |
+
+## Key Takeaway
+
+The real problem is not reading the temperature sensor.
+
+The real problem is that **business logic becomes dependent on a specific hardware implementation**. As the product evolves, hardware changes become expensive, testing becomes difficult, and overall system reliability decreases.
+
+This problem is what motivates the introduction of a **Hardware Abstraction Layer (HAL)**.
