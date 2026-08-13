@@ -125,6 +125,7 @@ When one side changes, the other side is often affected.
 
 The real problem is not reading the temperature sensor.
 
+
 ## 2. Why It Happens 🔍
 
 ### Root Cause
