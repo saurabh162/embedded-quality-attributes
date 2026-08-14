@@ -2,6 +2,7 @@
 ## Contents
 
 - [Real Problem](#real-problem)
+- [Why It Happens](#why-it-happens)
    
 ---
 
