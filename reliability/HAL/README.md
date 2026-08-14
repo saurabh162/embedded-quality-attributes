@@ -1,11 +1,11 @@
 # Hardware Abstraction Layer (HAL)
 ## Contents
 
-- #real-problem
-- [Why-it-happens
-- [Architecture Solution- #uml-diagram
-- #c-example
-- [Benefits](#trade-offs
+- [Real Problem](#real-problem
+- [Why It Happens](#whytion](#architecture-solution
+gram
+- [C++nefits](#benefits
+-s](#trade-offs
 
 ---
 
