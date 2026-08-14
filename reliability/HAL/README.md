@@ -2,10 +2,8 @@
 ## Contents
 
 - [Real Problem](#real-problem
-- [Why It Happens](#whytion](#architecture-solution
-gram
-- [C++nefits](#benefits
--s](#trade-offs
+
+
 
 ---
 
