@@ -116,11 +116,6 @@ When one side changes, the other side is often affected.
 | Maintenance effort | High |
 | Regression risk | High |
 
-### Key Takeaway
-
-The real problem is not reading the temperature sensor.
-
-
 
 ## Why It Happens 
 
