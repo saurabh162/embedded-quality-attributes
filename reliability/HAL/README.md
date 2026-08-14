@@ -9,7 +9,7 @@ gram
 
 ---
 
-## Real Problem 🚨
+## Real Problem
 
 ### Problem Description
 
