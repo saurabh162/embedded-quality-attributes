@@ -8,8 +8,6 @@
   
 ---
 
-
-
 ## 1. Real Problem 🚨
 
 ### Problem Description
