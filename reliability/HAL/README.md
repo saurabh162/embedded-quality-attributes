@@ -3,6 +3,11 @@
 
 - [Real Problem](#real-problem)
 - [Why It Happens](#why-it-happens)
+- [Architecture Solution](#architecture-solution)
+- [UML Diagram](#uml-diagram)
+- [CPP EXAMPLE](#cpp-example)
+- [Benefits](#benefits)
+- [Tradeoffs](#tradeoffs)
    
 ---
 
