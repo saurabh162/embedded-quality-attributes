@@ -118,7 +118,7 @@ When one side changes, the other side is often affected.
 
 The real problem is not reading the temperature sensor.
 
-## Why It Happens 🔍
+## Why It Happens 🔍 
 
 ### Root Cause
 
