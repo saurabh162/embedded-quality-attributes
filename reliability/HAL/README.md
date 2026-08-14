@@ -1,11 +1,12 @@
 # Hardware Abstraction Layer (HAL)
-## Real Problem 🚨
-## Why It Happens 🔍
-## Architecture Solution 🏛️
-## UML Diagram 📐
-## C++ Example 💻
-## Benefits ✅
-## Trade-offs ⚖️
+## Contents
+## Real Problem 
+## Why It Happens 
+## Architecture Solution 
+## UML Diagram 
+## C++ Example 
+## Benefits 
+## Trade-offs 
   
 ---
 
