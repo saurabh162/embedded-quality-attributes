@@ -44,7 +44,7 @@ However, after deployment, several situations may occur:
 - Engineers want to simulate sensor failures
 - Production team finds a hardware-related bug
 
-## Example Scenario
+### Example Scenario
 
 Assume the monitoring application contains code like this:
 
@@ -62,11 +62,11 @@ Even a small hardware change can create:
 - Increased risk of software defects
 - Longer release cycles
 
-## Impact on Reliability
+### Impact on Reliability
 
 Direct hardware dependency reduces system reliability because:
 
-### 1. Difficult Fault Injection
+#### 1. Difficult Fault Injection
 
 It becomes hard to simulate:
 
@@ -77,7 +77,7 @@ It becomes hard to simulate:
 
 Without simulation capability, many failure scenarios remain untested.
 
-### 2. Limited Unit Testing
+#### 2. Limited Unit Testing
 
 Application code cannot easily run without actual hardware.
 
@@ -89,7 +89,7 @@ Developers often need:
 
 for even basic testing.
 
-### 3. High Change Impact
+#### 3. High Change Impact
 
 A sensor replacement may force changes across multiple software modules.
 
@@ -99,13 +99,13 @@ More modified code means:
 - Higher defect probability
 - Lower maintainability
 
-### 4. Tight Coupling
+#### 4. Tight Coupling
 
 Application logic becomes tightly coupled to the hardware implementation.
 
 When one side changes, the other side is often affected.
 
-## Reliability Risk Summary
+### Reliability Risk Summary
 
 | Risk | Effect |
 |--------|----------|
@@ -116,9 +116,10 @@ When one side changes, the other side is often affected.
 | Maintenance effort | High |
 | Regression risk | High |
 
-## Key Takeaway
+### Key Takeaway
 
 The real problem is not reading the temperature sensor.
+
 
 ## Why It Happens 
 
