@@ -139,6 +139,4 @@ The application knows exactly:
 
 This creates a strong dependency between the application and the hardware.
 
-The real problem is that **business logic becomes dependent on a specific hardware implementation**. As the product evolves, hardware changes become expensive, testing becomes difficult, and overall system reliability decreases.
-
 This problem is what motivates the introduction of a **Hardware Abstraction Layer (HAL)**.
