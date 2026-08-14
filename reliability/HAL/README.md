@@ -2,9 +2,7 @@
 ## Contents
 
 - [Real Problem](#real-problem
-
-
-
+  
 ---
 
 ## Real Problem
