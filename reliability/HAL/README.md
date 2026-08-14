@@ -128,14 +128,10 @@ The problem occurs because the application depends directly on a specific hardwa
 
 In our example, the `TemperatureMonitor` communicates directly with the `TMP36 Driver`.
 
-```text
-TemperatureMonitor
-        |
-        v
-    TMP36 Driver
-        |
-        v
-     Hardware
+```mermaid
+graph TD
+    A[Temperature Monitor] --> B[TMP36 Driver]
+    B --> C[Hardware]
 ```
 
 The application knows exactly:
