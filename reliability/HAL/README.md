@@ -141,20 +141,16 @@ This creates a strong dependency between the application and the hardware.
 
 This problem is what motivates the introduction of a **Hardware Abstraction Layer (HAL)**.
 
-## Architecture Solution 🏛️
+## Architecture Solution 
 
 ### Solution Overview
 
 The root cause of the problem is that the application depends directly on a specific hardware driver.
 
-```text
-TemperatureMonitor
-        |
-        v
-    TMP36 Driver
-        |
-        v
-     Hardware
+```mermaid
+graph TD
+    A[Temperature Monitor] --> B[TMP36 Driver]
+    B --> C[Hardware]
 ```
 
 As a result:
