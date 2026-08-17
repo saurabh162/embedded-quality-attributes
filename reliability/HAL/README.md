@@ -173,17 +173,11 @@ A Hardware Abstraction Layer (HAL) is a software layer that sits between:
 
 The application communicates with an abstraction instead of a concrete driver.
 
-```text
-Application
-     |
-     v
-     HAL
-     |
-     v
-Hardware Driver
-     |
-     v
- Hardware
+```mermaid
+graph TD
+    A[Application] --> B[HAL]
+    B --> C[Hardware Driver]
+    C --> D[Hardware]
 ```
 
 This separation prevents hardware details from leaking into the application layer.
