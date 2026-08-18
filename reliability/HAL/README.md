@@ -557,3 +557,231 @@ The UML diagram demonstrates the core idea behind the Hardware Abstraction Layer
 > Depend on abstractions, not concrete implementations.
 
 By introducing the `ITemperatureSensor` interface, the application becomes independent of hardware-specific details, resulting in a more maintainable, testable, and reliable embedded system.
+
+## C++ Example 💻
+
+### Goal
+
+The goal of this example is to demonstrate how a Hardware Abstraction Layer (HAL) allows the application to depend on an abstraction instead of a hardware-specific driver.
+
+---
+
+### Step 1: Define the HAL Interface
+
+The application only needs a temperature value.
+
+The interface defines *what* the application needs, not *how* the temperature is obtained.
+
+```cpp
+class ITemperatureSensor
+{
+public:
+    virtual float readTemperature() = 0;
+    virtual ~ITemperatureSensor() = default;
+};
+```
+
+---
+
+### Step 2: Implement the TMP36 Driver
+
+The driver implements the HAL interface.
+
+```cpp
+class TMP36Driver : public ITemperatureSensor
+{
+public:
+    float readTemperature() override
+    {
+        // In a real system:
+        // 1. Read ADC value
+        // 2. Convert voltage to temperature
+        // 3. Return temperature
+
+        return 25.5f;
+    }
+};
+```
+
+---
+
+### Step 3: Create the Application Logic
+
+The application depends only on the interface.
+
+```cpp
+#include <iostream>
+
+class TemperatureMonitor
+{
+public:
+    explicit TemperatureMonitor(ITemperatureSensor& sensor)
+        : sensor_(sensor)
+    {
+    }
+
+    void monitor()
+    {
+        float temperature = sensor_.readTemperature();
+
+        std::cout << "Temperature: "
+                  << temperature
+                  << " °C"
+                  << std::endl;
+
+        if (temperature > 80.0f)
+        {
+            std::cout << "Alarm Triggered!"
+                      << std::endl;
+        }
+    }
+
+private:
+    ITemperatureSensor& sensor_;
+};
+```
+
+Notice that `TemperatureMonitor` does not know:
+
+- Which sensor is used
+- How the sensor works
+- How temperature is obtained
+
+It only knows about the `ITemperatureSensor` interface.
+
+---
+
+### Step 4: Connect Everything Together
+
+```cpp
+int main()
+{
+    TMP36Driver sensor;
+
+    TemperatureMonitor monitor(sensor);
+
+    monitor.monitor();
+
+    return 0;
+}
+```
+
+Output:
+
+```text
+Temperature: 25.5 °C
+```
+
+---
+
+### Unit Testing Without Hardware
+
+One of the biggest benefits of HAL is that we can replace the real driver with a mock implementation.
+
+---
+
+### Step 5: Create a Mock Sensor
+
+```cpp
+class MockTemperatureSensor : public ITemperatureSensor
+{
+public:
+    float readTemperature() override
+    {
+        return 95.0f;
+    }
+};
+```
+
+---
+
+### Step 6: Test the Application
+
+Without changing a single line inside `TemperatureMonitor`, we can test alarm behavior.
+
+```cpp
+int main()
+{
+    MockTemperatureSensor sensor;
+
+    TemperatureMonitor monitor(sensor);
+
+    monitor.monitor();
+
+    return 0;
+}
+```
+
+Output:
+
+```text
+Temperature: 95.0 °C
+Alarm Triggered!
+```
+
+---
+
+### Sensor Replacement Example
+
+Suppose the TMP36 sensor is replaced by a TMP117 sensor.
+
+A new driver can be written:
+
+```cpp
+class TMP117Driver : public ITemperatureSensor
+{
+public:
+    float readTemperature() override
+    {
+        return 24.8f;
+    }
+};
+```
+
+Application code remains unchanged:
+
+```cpp
+TMP117Driver sensor;
+TemperatureMonitor monitor(sensor);
+```
+
+No modifications are required in:
+
+- TemperatureMonitor
+- Alarm logic
+- Business rules
+- Reporting components
+
+---
+
+### What We Achieved
+
+By introducing the `ITemperatureSensor` interface:
+
+✅ Application logic is independent of hardware.
+
+✅ Hardware can be replaced with minimal effort.
+
+✅ Unit tests can run without real hardware.
+
+✅ Fault scenarios can be simulated easily.
+
+✅ Software becomes more maintainable and reusable.
+
+---
+
+### Key Takeaway
+
+The application depends on the abstraction:
+
+```text
+TemperatureMonitor --> ITemperatureSensor
+```
+
+instead of the implementation:
+
+```text
+TemperatureMonitor --> TMP36Driver
+```
+
+This simple change improves testability, maintainability, and reliability while keeping the application isolated from hardware-specific details.
