@@ -558,7 +558,7 @@ The UML diagram demonstrates the core idea behind the Hardware Abstraction Layer
 
 By introducing the `ITemperatureSensor` interface, the application becomes independent of hardware-specific details, resulting in a more maintainable, testable, and reliable embedded system.
 
-## C++ Example 💻
+## C++ Example 
 
 ### Goal
 
