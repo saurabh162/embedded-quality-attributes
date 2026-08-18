@@ -261,23 +261,21 @@ Both drivers provide the same functionality to the application.
 
 Before HAL:
 
-```text
-TemperatureMonitor
-        |
-        v
-    TMP36 Driver
+```mermaid
+graph TD
+    TM[TemperatureMonitor] --> TMP[TMP36 Driver]
 ```
 
 After HAL:
 
-```text
-TemperatureMonitor
-        |
-        v
-ITemperatureSensor
-        ^
-        |
-  TMP36 Driver
+```mermaid
+graph TD
+    TM[Temperature Monitor]
+    ITS[ITemperatureSensor]
+    TMP[TMP36 Driver]
+
+    TM --> ITS
+    TMP --> ITS
 ```
 
 This is an important architectural improvement.
