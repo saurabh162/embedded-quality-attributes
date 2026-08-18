@@ -376,3 +376,184 @@ This simple architectural change makes the system:
 - More resilient to hardware changes
 
 In the next section, we will visualize this design using a UML Class Diagram.
+
+## UML Diagram 
+
+### Purpose of the Diagram
+
+The UML Class Diagram visualizes how the Hardware Abstraction Layer (HAL) separates the application from hardware-specific implementations.
+
+Instead of depending directly on a concrete driver, the application depends on an abstraction (`ITemperatureSensor`).
+
+This enables:
+
+- Easier hardware replacement
+- Improved testability
+- Better maintainability
+- Fault simulation through mock implementations
+
+---
+
+### UML Class Diagram
+
+```mermaid
+classDiagram
+
+    class TemperatureMonitor
+    class ITemperatureSensor
+    class TMP36Driver
+    class MockTemperatureSensor
+
+    TemperatureMonitor --> ITemperatureSensor : uses
+
+    TMP36Driver ..|> ITemperatureSensor : implements
+    MockTemperatureSensor ..|> ITemperatureSensor : implements
+```
+
+---
+
+### Diagram Explanation
+
+#### TemperatureMonitor
+
+The `TemperatureMonitor` class contains the application logic.
+
+Responsibilities:
+
+- Obtain temperature measurements
+- Process temperature values
+- Trigger alarms or notifications
+- Send data to other system components
+
+Most importantly, it does **not** know which sensor is being used.
+
+It only depends on the `ITemperatureSensor` interface.
+
+---
+
+#### ITemperatureSensor
+
+The `ITemperatureSensor` interface represents the Hardware Abstraction Layer (HAL).
+
+Example:
+
+```cpp
+class ITemperatureSensor
+{
+public:
+    virtual float readTemperature() = 0;
+    virtual ~ITemperatureSensor() = default;
+};
+```
+
+The interface defines:
+
+> "What the application needs"
+
+instead of
+
+> "How the hardware works"
+
+This allows the application to remain independent of hardware details.
+
+---
+
+#### TMP36Driver
+
+`TMP36Driver` is a hardware-specific implementation of the interface.
+
+Responsibilities:
+
+- Read ADC values
+- Convert voltage into temperature
+- Interact with the underlying hardware
+
+The application never communicates with this class directly.
+
+---
+
+#### MockTemperatureSensor
+
+`MockTemperatureSensor` is used during testing.
+
+It allows developers to:
+
+- Run tests without hardware
+- Simulate sensor failures
+- Simulate extreme temperatures
+- Verify application behavior
+
+Example:
+
+```cpp
+MockTemperatureSensor mockSensor;
+```
+
+This object can return predefined values during unit testing.
+
+---
+
+### Dependency Flow
+
+The dependency flow is intentionally designed as follows:
+
+```text
+TemperatureMonitor
+        |
+        v
+ITemperatureSensor
+        ^
+        |
+   TMP36Driver
+```
+
+The important observation is that:
+
+✅ Application depends on the interface.
+
+✅ Driver depends on the interface.
+
+✅ Application does not depend on the driver.
+
+This dependency direction helps isolate hardware changes from application logic.
+
+---
+
+### Why This Design Is More Reliable
+
+Suppose the TMP36 sensor is replaced with a new sensor.
+
+Without HAL:
+
+```text
+TemperatureMonitor → TMP36Driver
+```
+
+Application code may need modification.
+
+With HAL:
+
+```text
+TemperatureMonitor → ITemperatureSensor
+```
+
+Only the new driver implementation changes.
+
+The application remains untouched.
+
+As a result:
+
+- Hardware upgrades become simpler.
+- Maintenance effort is reduced.
+- Regression risk is lower.
+- Unit testing becomes easier.
+
+---
+
+### Key Takeaway
+
+The UML diagram demonstrates the core idea behind the Hardware Abstraction Layer pattern:
+
+> Depend on abstractions, not concrete implementations.
+
+By introducing the `ITemperatureSensor` interface, the application becomes independent of hardware-specific details, resulting in a more maintainable, testable, and reliable embedded system.
