@@ -497,15 +497,15 @@ This object can return predefined values during unit testing.
 
 The dependency flow is intentionally designed as follows:
 
-```text
-TemperatureMonitor
-        |
-        v
-ITemperatureSensor
-        ^
-        |
-   TMP36Driver
+```mermaid
+graph TD
+    TM[TemperatureMonitor]
+    ITS[ITemperatureSensor]
+
+    TM --> ITS
+    TMP36Driver --> ITS
 ```
+``
 
 The important observation is that:
 
