@@ -785,3 +785,15 @@ TemperatureMonitor --> TMP36Driver
 ```
 
 This simple change improves testability, maintainability, and reliability while keeping the application isolated from hardware-specific details.
+
+### Complete Source Code
+
+The complete implementation can be found in:
+
+```text
+src/
+├── ITemperatureSensor.h
+├── TMP36Driver.h
+├── MockTemperatureSensor.h
+├── TemperatureMonitor.h
+└── main.cpp
