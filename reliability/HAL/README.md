@@ -558,7 +558,7 @@ The UML diagram demonstrates the core idea behind the Hardware Abstraction Layer
 
 By introducing the `ITemperatureSensor` interface, the application becomes independent of hardware-specific details, resulting in a more maintainable, testable, and reliable embedded system.
 
-## C++ Example 
+## CPP EXAMPLE
 
 ### Goal
 
@@ -785,3 +785,34 @@ TemperatureMonitor --> TMP36Driver
 ```
 
 This simple change improves testability, maintainability, and reliability while keeping the application isolated from hardware-specific details.
+
+### Complete Source Code
+
+The complete implementation can be found in:
+
+```text
+src/
+├── ITemperatureSensor.h
+├── TMP36Driver.h
+├── MockTemperatureSensor.h
+├── TemperatureMonitor.h
+└── main.cpp
+```
+
+### Building the Example
+
+```bash
+make
+```
+
+### Running the Example
+
+```bash
+make run
+```
+
+### Cleaning Build Files
+
+```bash
+make clean
+```
