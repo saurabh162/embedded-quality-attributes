@@ -797,6 +797,7 @@ src/
 ├── MockTemperatureSensor.h
 ├── TemperatureMonitor.h
 └── main.cpp
+```
 
 ### Building the Example
 
