@@ -797,3 +797,21 @@ src/
 ├── MockTemperatureSensor.h
 ├── TemperatureMonitor.h
 └── main.cpp
+
+### Building the Example
+
+```bash
+make
+```
+
+### Running the Example
+
+```bash
+make run
+```
+
+### Cleaning Build Files
+
+```bash
+make clean
+```
