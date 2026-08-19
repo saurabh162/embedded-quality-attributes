@@ -1012,7 +1012,7 @@ As a result, embedded software becomes:
 
 For long-lived embedded products, these benefits often outweigh the small increase in design complexity introduced by the abstraction layer.
 
-## Trade-offs 
+## Tradeoffs 
 
 Like any architectural pattern, the Hardware Abstraction Layer (HAL) provides many benefits but also introduces certain trade-offs.
 
