@@ -54,8 +54,8 @@ embedded systems through:
 | Topic | Status |
 |---------|----------|
 | Reliability Introduction | ✅ |
-| HAL Pattern | 🚧 |
-| Retry Pattern | Planned |
+| HAL Pattern | ✅ |
+| Retry Pattern | 🚧 |
 | Watchdog Pattern | Planned |
 | State Machine Pattern | Planned |
 
