@@ -76,3 +76,10 @@ testability/
 This project is licensed under the MIT License.
 
 You are free to use, modify, and distribute the content and source code for personal or commercial purposes.
+
+## Disclaimer
+
+The examples in this repository are intended for educational purposes.
+
+They focus on architectural concepts and may require additional considerations before use in production systems.
+`
