@@ -18,7 +18,7 @@ embedded systems through:
 ## Quality Attributes
 
 ### ✅ Reliability
-- [HAL (Hardware Abstraction Layer)](reliability/H
+- [HAL (Hardware Abstraction Layer)](https://github.com/saurabh162/embedded-quality-attributes/tree/main/reliability/HAL)
 - HAL (Hardware Abstraction Layer)
 - Retry Pattern
 - Watchdog Pattern
