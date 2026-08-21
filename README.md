@@ -69,6 +69,7 @@ maintainability/
 performance/
 scalability/
 testability/
+```
 
 ## License
 
