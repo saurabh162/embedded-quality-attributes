@@ -69,3 +69,9 @@ maintainability/
 performance/
 scalability/
 testability/
+
+## License
+
+This project is licensed under the MIT License.
+
+You are free to use, modify, and distribute the content and source code for personal or commercial purposes.
