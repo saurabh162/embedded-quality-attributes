@@ -71,6 +71,12 @@ scalability/
 testability/
 ```
 
+## Support the Project
+
+If you find this repository helpful, consider giving it a ⭐ on GitHub.
+
+It helps other embedded engineers discover the content.
+
 ## License
 
 This project is licensed under the MIT License.
