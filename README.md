@@ -18,6 +18,7 @@ embedded systems through:
 ## Quality Attributes
 
 ### ✅ Reliability
+- [HAL (Hardware Abstraction Layer)](https://github.com/saurabh162/embedded-quality-attributes/tree/main/reliability/HAL)
 - HAL (Hardware Abstraction Layer)
 - Retry Pattern
 - Watchdog Pattern
@@ -54,8 +55,8 @@ embedded systems through:
 | Topic | Status |
 |---------|----------|
 | Reliability Introduction | ✅ |
-| HAL Pattern | 🚧 |
-| Retry Pattern | Planned |
+| HAL Pattern | ✅ |
+| Retry Pattern | 🚧 |
 | Watchdog Pattern | Planned |
 | State Machine Pattern | Planned |
 
@@ -69,3 +70,23 @@ maintainability/
 performance/
 scalability/
 testability/
+```
+
+## Support the Project
+
+If you find this repository helpful, consider giving it a ⭐ on GitHub.
+
+It helps other embedded engineers discover the content.
+
+## License
+
+This project is licensed under the MIT License.
+
+You are free to use, modify, and distribute the content and source code for personal or commercial purposes.
+
+## Disclaimer
+
+The examples in this repository are intended for educational purposes.
+
+They focus on architectural concepts and may require additional considerations before use in production systems.
+`
