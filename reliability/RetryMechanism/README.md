@@ -132,7 +132,16 @@ Retry
 This creates a different reliability problem.
 
 The software may remain stuck trying to communicate with a sensor that has actually failed.
-``
+
+Depending on the system architecture, this can:
+
+- Block useful work
+- Increase response latency
+- Prevent higher-level fault handling
+- Delay fault reporting
+- Interfere with timing requirements
+
+Neither extreme distinguishes between a **transient failure** and a **persistent failure**.
 
 ## Why It Happens 
 
