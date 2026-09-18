@@ -53,6 +53,21 @@ The first operation failed, but the sensor itself was not permanently broken.
 
 The failure was **transient**.
 
+Possible causes include:
+
+- Temporary communication timeout
+- Bus contention
+- Electrical noise
+- Sensor temporarily busy
+- Short-lived communication disturbance
+
+This creates an important architecture question:
+
+> **Should one failed sensor read immediately put the entire monitoring system into an error state?**
+
+Usually, not necessarily.
+
+But blindly retrying is not a good solution either.
 
 ### Two Naive Reactions
 
