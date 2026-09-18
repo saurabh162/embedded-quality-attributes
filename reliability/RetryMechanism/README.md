@@ -143,9 +143,23 @@ Depending on the system architecture, this can:
 
 Neither extreme distinguishes between a **transient failure** and a **persistent failure**.
 
-## Why It Happens 
+## Why It Happens
 
 ### Root Cause
+
+The architectural problem is not simply:
+
+> “The sensor read failed.”
+
+Failures are expected in real embedded systems.
+
+The deeper problem is:
+
+> **The system has no explicit recovery policy for a failed operation.**
+
+The sensor driver knows how to communicate with the hardware.
+
+
 
 ### Transient vs Persistent Failure
 
