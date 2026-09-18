@@ -102,6 +102,38 @@ However, a temporary communication disturbance can now cause an unnecessary syst
 
 A recoverable fault has been treated as a permanent fault.
 
+#### Reaction 2 - Retry Forever
+
+Another implementation may attempt to recover indefinitely:
+
+```cpp
+while (!sensor.readTemperature().success)
+{
+    // keep trying
+}
+```
+
+Now the system behaves like:
+
+```text
+Read
+  |
+Fail
+  |
+Retry
+  |
+Fail
+  |
+Retry
+  |
+...
+```
+
+This creates a different reliability problem.
+
+The software may remain stuck trying to communicate with a sensor that has actually failed.
+``
+
 ## Why It Happens 
 
 ### Root Cause
