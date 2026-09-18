@@ -71,6 +71,37 @@ But blindly retrying is not a good solution either.
 
 ### Two Naive Reactions
 
+When an operation fails, two simple implementations are common.
+
+#### Reaction 1 - Fail Immediately
+
+```cpp
+auto result = sensor.readTemperature();
+
+if (!result.success)
+{
+    enterSystemError();
+}
+```
+
+The architecture effectively behaves like this:
+
+```text
+Read
+  |
+  ▼
+Fail
+  |
+  ▼
+System Error
+```
+
+This is simple and deterministic.
+
+However, a temporary communication disturbance can now cause an unnecessary system-level failure.
+
+A recoverable fault has been treated as a permanent fault.
+
 ## Why It Happens 
 
 ### Root Cause
