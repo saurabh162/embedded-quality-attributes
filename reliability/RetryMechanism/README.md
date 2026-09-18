@@ -23,7 +23,7 @@ Our architecture now looks approximately like this:
 flowchart TB
     TM[TemperatureMonitor] --> ITS[ITemperatureSensor]
     TMP[TMP36 Driver] --> ITS
-
+```
 
 
 ### Two Naive Reactions
