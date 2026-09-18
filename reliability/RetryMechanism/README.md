@@ -159,6 +159,33 @@ The deeper problem is:
 
 The sensor driver knows how to communicate with the hardware.
 
+For example:
+
+```cpp
+sensor.readTemperature();
+```
+
+But several decisions remain unanswered:
+
+```text
+What should happen if it fails?
+        |
+        v
+Should we retry?
+        |
+        v
+Which failures are retryable?
+        |
+        v
+How many attempts are allowed?
+        |
+        v
+How long should we wait?
+        |
+        v
+What happens when recovery fails?
+```
+
 
 
 ### Transient vs Persistent Failure
