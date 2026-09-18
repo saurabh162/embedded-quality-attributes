@@ -185,6 +185,9 @@ How long should we wait?
         v
 What happens when recovery fails?
 ```
+These are not merely driver implementation details.
+
+They are **reliability-policy decisions**.
 
 
 
