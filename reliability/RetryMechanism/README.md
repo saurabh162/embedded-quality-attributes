@@ -24,7 +24,7 @@ flowchart TB
     TM[TemperatureMonitor] --> ITS[ITemperatureSensor]
     TMP[TMP36 Driver] --> ITS
 ```
-
+### Two Naive Reactions
 
 ### Two Naive Reactions
 
