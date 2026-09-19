@@ -212,6 +212,11 @@ This is why simply surrounding every failed operation with a retry loop is not a
 ## Architecture Solution 
 
 ### Introduce a Bounded Retry Policy
+
+Instead of immediately failing or retrying forever, introduce an explicit bounded retry policy.
+
+The recovery flow becomes:
+
 ### Retry Should Be Selective
 ### Where Should Retry Live? 
 ### Retry Must Be Bounded  
