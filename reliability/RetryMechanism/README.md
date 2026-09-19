@@ -189,9 +189,24 @@ These are not merely driver implementation details.
 
 They are **reliability-policy decisions**.
 
-
-
 ### Transient vs Persistent Failure
+
+A key architectural distinction is whether the failure has a reasonable chance of disappearing when the operation is attempted again.
+
+#### Transient Failure
+
+Example:
+
+```text
+Attempt 1 → Sensor disconnected
+Attempt 2 → Sensor disconnected
+Attempt 3 → Sensor disconnected
+```
+Additional retries do not repair the underlying fault.
+
+This means:
+> **Retry should only be applied when another attempt has a reasonable possibility of succeeding.**
+This is why simply surrounding every failed operation with a retry loop is not a robust architecture.
 
 ## Architecture Solution 
 
