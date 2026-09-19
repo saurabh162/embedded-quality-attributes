@@ -219,18 +219,19 @@ The recovery flow becomes:
 
 ```mermaid
 flowchart LR
-    Read[Read Sensor] --> Success{Success?}
+    A[Read Sensor] --> B{Success?}
+    B -->|Yes| C[Return Measurement]
+    B -->|No| D{Retryable?}
 
-    Success -->|Yes| Return[Return Measurement]
-    Success -->|No| Retryable{Retryable?}
+    subgraph Retry["Retry Flow"]
+        direction LR
+        D -->|Yes| E{Attempts Remaining?}
+        E -->|Yes| F[Wait]
+    end
 
-    Retryable -->|No| Failure[Escalate Failure]
-    Retryable -->|Yes| Attempts{Attempts Remaining?}
-
-    Attempts -->|No| Failure
-    Attempts -->|Yes| Wait[Wait]
-
-    Wait --> Read
+    D -->|No| G[Escalate Failure]
+    E -->|No| G
+    F --> A
 ```
 
 
