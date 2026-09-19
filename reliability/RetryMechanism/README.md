@@ -206,6 +206,7 @@ Additional retries do not repair the underlying fault.
 
 This means:
 > **Retry should only be applied when another attempt has a reasonable possibility of succeeding.**
+
 This is why simply surrounding every failed operation with a retry loop is not a robust architecture.
 
 ## Architecture Solution 
