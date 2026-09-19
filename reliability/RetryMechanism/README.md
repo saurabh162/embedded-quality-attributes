@@ -224,14 +224,15 @@ flowchart LR
     B -->|Yes| C[Return Measurement]
     B -->|No| D{Retryable?}
 
-    D -->|No| H[Escalate Failure]
+    D -->|No| G[Escalate Failure]
     D -->|Yes| E{Attempts Remaining?}
 
+    E -->|No| G
     E -->|Yes| F[Wait]
-    F --> A
 
-    E -->|No| H
+    F --> A
 ```
+
 
 ### Retry Should Be Selective
 ### Where Should Retry Live? 
