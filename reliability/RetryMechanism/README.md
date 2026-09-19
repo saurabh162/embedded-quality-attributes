@@ -217,23 +217,27 @@ Instead of immediately failing or retrying forever, introduce an explicit bounde
 
 The recovery flow becomes:
 
-```mermaid
-flowchart LR
-    A[Read Sensor] --> B{Success?}
-    B -->|Yes| C[Return Measurement]
-    B -->|No| D{Retryable?}
-
-    subgraph Retry["Retry Flow"]
-        direction LR
-        D -->|Yes| E{Attempts Remaining?}
-        E -->|Yes| F[Wait]
-    end
-
-    D -->|No| G[Escalate Failure]
-    E -->|No| G
-    F --> A
-```
-
+             Read Sensor
+                  │
+                  ▼
+              Success?
+             /        \
+          Yes          No
+           │            │
+           ▼            ▼
+ Return Measurement  Retryable?
+                     /        \
+                   No          Yes
+                   │            │
+                   ▼            ▼
+            Escalate      Attempts Remaining?
+                           /           \
+                         No             Yes
+                          │              │
+                          ▼              ▼
+                    Escalate           Wait
+                                         │
+                                         └──→ Read Sensor
 
 ### Retry Should Be Selective
 ### Where Should Retry Live? 
