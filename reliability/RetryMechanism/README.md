@@ -217,27 +217,21 @@ Instead of immediately failing or retrying forever, introduce an explicit bounde
 
 The recovery flow becomes:
 
-             Read Sensor
-                  │
-                  ▼
-              Success?
-             /        \
-          Yes          No
-           │            │
-           ▼            ▼
- Return Measurement  Retryable?
-                     /        \
-                   No          Yes
-                   │            │
-                   ▼            ▼
-            Escalate      Attempts Remaining?
-                           /           \
-                         No             Yes
-                          │              │
-                          ▼              ▼
-                    Escalate           Wait
-                                         │
-                                         └──→ Read Sensor
+```mermaid
+flowchart TD
+    A[Read Sensor] --> B{Success?}
+
+    B -->|Yes| C[Return Measurement]
+    B -->|No| D{Retryable?}
+
+    D -->|No| G[Escalate Failure]
+    D -->|Yes| E{Attempts Remaining?}
+
+    E -->|No| G
+    E -->|Yes| F[Wait]
+
+    F --> A
+```
 
 ### Retry Should Be Selective
 ### Where Should Retry Live? 
