@@ -1,4 +1,4 @@
-# Hardware Abstraction Layer (HAL)
+# Retry Mechanism
 ## Contents
 
 - [Real Problem](#real-problem)
