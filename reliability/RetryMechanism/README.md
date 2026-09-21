@@ -424,8 +424,13 @@ A well-designed retry mechanism should be:
 
 **Selective → Bounded → Observable → Escalated**
 
-**Selective:** retry only failures that may be
+**Selective:** retry only failures that may be transient.
 
+**Bounded:** limit attempts and recovery time.
+
+**Observable:** record or expose repeated failures so retry does not silently hide degradation.
+
+**Escalated:** when the retry budget is exhausted, pass the failure to the appropriate higher-level fault-handling mechanism.
 
 ## UML Diagram 
 
