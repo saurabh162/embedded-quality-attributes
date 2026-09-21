@@ -418,7 +418,7 @@ This is exactly the kind of trade-off we want your GitHub repository to teach: t
 
 ---
 
-## Key Architecture Principle
+### Key Architecture Principle
 
 A well-designed retry mechanism should be:
 
