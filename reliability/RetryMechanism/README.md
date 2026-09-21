@@ -328,8 +328,104 @@ ITemperatureSensor
 The application asks for a temperature measurement.
 The sensor service decides how temporary failures should be handled.
 
-### Retry Must Be Bounded  
+### Retry Must Be Bounded 
+
+A reliable retry policy needs an upper limit.
+For example:
+
+```text
+Maximum attempts: 3
+Delay:            10 ms
+```
+
+Execution might look like:
+
+```text
+Attempt 1
+   |
+Timeout
+   |
+Wait 10 ms
+   |
+Attempt 2
+   |
+Timeout
+   |
+Wait 10 ms
+   |
+Attempt 3
+   |
+Success
+   ▼
+Return measurement
+```
+
+But if all attempts fail:
+
+```text
+Attempt 1 → Fail
+Attempt 2 → Fail
+Attempt 3 → Fail
+              |
+              ▼
+        Retry exhausted
+              |
+              ▼
+     Escalate the failure
+```
+
+The important principle is:
+
+> **Retry is recovery, not fault suppression.**
+
+Once the recovery budget has been exhausted, the failure must become visible to the next architectural level.
+
 ### Retry Has a Timing Cost
+
+This deserves particular attention in embedded systems.
+
+Suppose:
+
+```text
+Sensor timeout = 20 ms
+Retry delay    = 10 ms
+Attempts       = 3
+```
+A failing sensor operation can now consume roughly:
+
+```text
+20 ms + 10 ms + 20 ms + 10 ms + 20 ms
+= 80 ms
+```
+
+So increasing the retry count may improve tolerance to transient faults while simultaneously degrading **timing performance**.
+
+That connects two of the quality attributes in this series:
+
+```text
+More retries
+    |
+    ├──► potentially better Reliability
+    |
+    └──► potentially worse Latency / Performance
+```
+
+Therefore:
+
+> **The retry budget must fit inside the system's timing budget.**
+
+This is exactly the kind of trade-off we want your GitHub repository to teach: the architecture decision is not simply *"use Retry."* It is *"how much recovery can this system safely afford?"*
+
+---
+
+## Key Architecture Principle
+
+A well-designed retry mechanism should be:
+
+**Selective → Bounded → Observable → Escalated**
+
+**Selective:** retry only failures that may be
+
 
 ## UML Diagram 
 
