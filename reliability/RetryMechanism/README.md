@@ -239,9 +239,23 @@ The retry mechanism now makes several decisions explicitly:
 4.	**What happens when all attempts fail?** 
 This turns retry from an accidental loop into a deliberate reliability policy.
 
-
-
 ### Retry Should Be Selective
+
+Not every error should trigger another attempt.
+
+Consider:
+
+```text
+Communication timeout      → Retry may help
+Sensor busy                → Retry may help
+Temporary bus contention   → Retry may help
+
+Invalid configuration      → Retry probably won't help
+Unsupported command        → Retry won't help
+Sensor disconnected        → Repeated immediate retries may not help
+```
+
+
 ### Where Should Retry Live? 
 ### Retry Must Be Bounded  
 ### Retry Has a Timing Cost
