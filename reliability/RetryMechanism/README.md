@@ -254,9 +254,80 @@ Invalid configuration      → Retry probably won't help
 Unsupported command        → Retry won't help
 Sensor disconnected        → Repeated immediate retries may not help
 ```
+The exact classification depends on the device and its failure model.
+Therefore, the retry mechanism needs meaningful error information from the lower layer.
+Instead of an interface that can only return a temperature value:
 
+```cpp
+float readTemperature();
+```
+the design should communicate whether the operation succeeded and, when it failed, why it failed.
+
+For example:
+
+```cpp
+enum class SensorError
+{
+    None,
+    Timeout,
+    Busy,
+    CommunicationError,
+    InvalidData,
+    HardwareFault
+};
+```
+This enables the recovery layer to make an explicit decision instead of treating every failure identically.
 
 ### Where Should Retry Live? 
+
+Retry sits in a **Sensor Service + Retry** component between `TemperatureMonitor` and `ITemperatureSensor`.
+
+```mermaid
+flowchart TB
+    TemperatureMonitor --> TemperatureSensorService
+    TemperatureSensorService --> ITemperatureSensor
+    TMP36Driver --> ITemperatureSensor
+```
+Responsibilities become:
+
+| Component | Responsibility |
+|---|---|
+| `TemperatureMonitor` | Application/business behavior |
+| `TemperatureSensorService` | Recovery and retry policy |
+| `ITemperatureSensor` | Hardware abstraction |
+| `TMP36Driver` | Hardware-specific communication |
+
+This separation is important.
+
+We do **not** want code such as this spread throughout application logic:
+
+```cpp
+if (sensor.readTemperature() fails)
+{
+    delay();
+    retry();
+}
+```
+Otherwise every application component may invent its own recovery behavior.
+Instead:
+
+```text
+TemperatureMonitor
+        |
+        ▼
+TemperatureSensorService
+        |
+    Retry Policy
+        |
+        ▼
+ITemperatureSensor
+        ▲
+        |
+    TMP36Driver
+```
+The application asks for a temperature measurement.
+The sensor service decides how temporary failures should be handled.
+
 ### Retry Must Be Bounded  
 ### Retry Has a Timing Cost
 
