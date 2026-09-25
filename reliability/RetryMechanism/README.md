@@ -506,11 +506,110 @@ classDiagram
     ITemperatureSensor --> SensorResult : returns
     SensorResult --> SensorError : contains
 ```
-
-
 This follows the architecture shown in the **Reliability_Retry** carousel.
+
 ### Diagram Explanation
 
+### Diagram Explanation
+
+#### `TemperatureMonitor`
+
+`TemperatureMonitor` contains the application logic.
+
+Its responsibilities remain focused on things such as:
+
+- Requesting a temperature measurement
+- Processing the value
+- Triggering alarms
+- Updating the display
+- Reporting measurements
+
+It should not know:
+
+- How many retry attempts are allowed
+- Which failures are retryable
+- How long to wait between retries
+
+That keeps recovery policy out of the business logic.
+
+#### `TemperatureSensorService`
+
+This is the key new architectural component.
+
+It sits between:
+
+```text
+TemperatureMonitor
+        ↓
+TemperatureSensorService
+        ↓
+ITemperatureSensor
+
+Its responsibilities include:
+
+Calling the sensor
+Examining the returned error
+Deciding whether the failure is retryable
+Waiting between attempts
+Limiting the number of attempts
+Returning success or an exhausted failure to the application
+
+Conceptually:
+
+```text
+readTemperature()
+        ↓
+    Sensor read
+        ↓
+      Failure
+        ↓
+    Retryable?
+
+    ├── No  → Escalate
+    │
+    └── Yes
+        ↓
+    Attempts remaining?
+
+    ├── Yes → Wait → Retry
+    │
+    └── No  → Escalate
+
+This reflects the central decision from the carousel: **separate business logic from recovery policy.
+
+---
+
+#### `RetryPolicy`
+
+`RetryPolicy` contains configuration and rules for recovery.
+
+For example:
+
+```cpp
+struct RetryPolicy
+{
+    uint8_t maxAttempts;
+    uint32_t delayMs;
+};
+```
+
+It may also determine which failures can be retried:
+
+```cpp
+bool isRetryable(SensorError error);
+```
+
+For example:
+
+```text
+Timeout             → Retry
+Busy                → Retry
+CommunicationError  → Retry
+
+InvalidData         → Do not automatically retry
+HardwareFault       → Do not repeatedly retry
+```
+The important architectural point is that retry behavior becomes an **explicit policy**, rather than an accidental loop buried in application code.
 
 ## CPP EXAMPLE
 ### Goal
