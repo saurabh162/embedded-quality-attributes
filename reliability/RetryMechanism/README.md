@@ -435,7 +435,80 @@ A well-designed retry mechanism should be:
 ## UML Diagram 
 
 ### Purpose of the Diagram
+
+The UML Class Diagram shows how retry behavior is separated from both:
+
+- Application logic
+- Hardware-specific sensor communication
+
+The application does not implement retry itself.
+
+Instead, a dedicated `TemperatureSensorService` applies the retry policy before calling the hardware abstraction.
+
 ### UML Class Diagram
+
+```mermaid
+classDiagram
+    direction TB
+
+    class TemperatureMonitor {
+        +monitor()
+    }
+
+    class TemperatureSensorService {
+        -ITemperatureSensor& sensor
+        -RetryPolicy retryPolicy
+        +readTemperature() SensorResult
+    }
+
+    class RetryPolicy {
+        +uint8_t maxAttempts
+        +uint32_t delayMs
+        +isRetryable(error) bool
+    }
+
+    class ITemperatureSensor {
+        <<interface>>
+        +readTemperature() SensorResult
+    }
+
+    class TMP36Driver {
+        +readTemperature() SensorResult
+    }
+
+    class MockTemperatureSensor {
+        +readTemperature() SensorResult
+    }
+
+    class SensorResult {
+        +bool success
+        +float temperature
+        +SensorError error
+    }
+
+    class SensorError {
+        <<enumeration>>
+        None
+        Timeout
+        Busy
+        CommunicationError
+        InvalidData
+        HardwareFault
+    }
+
+    TemperatureMonitor --> TemperatureSensorService : uses
+    TemperatureSensorService --> RetryPolicy : applies
+    TemperatureSensorService --> ITemperatureSensor : uses
+
+    TMP36Driver ..|> ITemperatureSensor : implements
+    MockTemperatureSensor ..|> ITemperatureSensor : implements
+
+    ITemperatureSensor --> SensorResult : returns
+    SensorResult --> SensorError : contains
+```
+
+
+This follows the architecture shown in the **Reliability_Retry** carousel.
 ### Diagram Explanation
 
 
