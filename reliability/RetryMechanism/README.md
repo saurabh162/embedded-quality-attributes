@@ -510,8 +510,6 @@ This follows the architecture shown in the **Reliability_Retry** carousel.
 
 ### Diagram Explanation
 
-### Diagram Explanation
-
 #### `TemperatureMonitor`
 
 `TemperatureMonitor` contains the application logic.
