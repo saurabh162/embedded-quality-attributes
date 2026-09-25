@@ -846,6 +846,84 @@ This separation is important because each layer answers a different question.
 | `TemperatureSensorService` | Should and how should this failure be retried? |
 | `ITemperatureSensor` | What sensor operation is available? |
 | `TMP36Driver` | How is the physical sensor accessed? |
+
+## Architecture Evolution
+
+This also shows how the architecture of our running product is gradually improving.
+
+### Initial Design
+
+```text
+TemperatureMonitor
+        |
+        v
+TMP36Driver
+```
+### After HAL
+
+```text
+TemperatureMonitor
+        |
+        v
+ITemperatureSensor
+        ^
+        |
+TMP36Driver
+```
+### After Retry
+
+```text
+TemperatureMonitor
+        |
+        v
+TemperatureSensorService
+        |
+        v
+ITemperatureSensor
+        ^
+        |
+TMP36Driver
+```
+HAL solved **hardware dependency**.
+
+Retry now addresses **transient operational failure**.
+
+That progression is exactly the continuity we want across the series.
+
+## Key Takeaway
+
+The key architecture decision is not simply:
+
+> Add a retry loop.
+
+It is:
+
+> **Give recovery policy a clear architectural owner.**
+
+In this design:
+
+```text
+TemperatureSensorService
+```
+owns the retry decision, while:
+
+```text
+TemperatureMonitor
+```
+remains focused on application behavior and:
+
+```text
+TMP36Driver
+```
+remains focused on hardware communication.
+
+The result is a design where retry behavior can be:
+
+**Selective → Bounded → Observable → Escalated**
+
+without mixing recovery logic into unrelated layers.
+
+
 ## CPP EXAMPLE
 ### Goal
 
