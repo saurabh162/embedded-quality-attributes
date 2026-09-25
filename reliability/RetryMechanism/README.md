@@ -644,6 +644,208 @@ Its job is to:
 
 It should normally report the failure rather than decide the complete system recovery policy.
 
+That separation is important:
+
+```text
+Driver
+
+"What happened?"
+
+        ↓
+
+Sensor Service
+
+"What should we do about it?"
+```
+
+#### `SensorResult`
+
+A simple `float` is no longer sufficient because the retry layer needs to know whether the operation succeeded.
+
+For example:
+
+```cpp
+struct SensorResult
+{
+    bool success;
+    float temperature;
+    SensorError error;
+};
+```
+
+Example successful result:
+
+```text
+success      = true
+temperature  = 42.3
+error        = None
+```
+This allows the recovery layer to distinguish different failure types.
+
+#### `SensorError`
+
+The error type provides information needed for recovery decisions.
+
+Example:
+
+```cpp
+enum class SensorError
+{
+    None,
+    Timeout,
+    Busy,
+    CommunicationError,
+    InvalidData,
+    HardwareFault
+};
+```
+This is important because:
+
+> A retry mechanism cannot be selective if every failure looks identical.
+
+## Dependency Flow
+
+The architecture can also be viewed more simply as:
+
+```mermaid
+flowchart TB
+    TM[TemperatureMonitor]
+    TSS[TemperatureSensorService<br/>Retry Responsibility]
+    ITS[ITemperatureSensor]
+    TMP[TMP36Driver]
+
+    TM --> TSS
+    TSS --> ITS
+    TMP -. implements .-> ITS
+```
+The important separation is:
+
+```text
+Application responsibility
+        ↓
+TemperatureMonitor
+
+
+Recovery responsibility
+        ↓
+TemperatureSensorService
+
+
+Hardware abstraction
+        ↓
+ITemperatureSensor
+
+
+Hardware responsibility
+        ↓
+TMP36Driver
+```
+This gives every layer a clear reason to change.
+
+## Retry Sequence
+
+For the repository, I also recommend adding a small sequence diagram because retry is a **behavioral mechanism**, and the class diagram alone does not show the recovery flow very clearly.
+
+```mermaid
+sequenceDiagram
+    participant TM as TemperatureMonitor
+    participant TSS as TemperatureSensorService
+    participant ITS as ITemperatureSensor
+
+    TM->>TSS: readTemperature()
+    TSS->>ITS: readTemperature()
+    ITS-->>TSS: Timeout
+
+    Note over TSS: Failure is retryable
+
+    TSS->>TSS: Wait
+    TSS->>ITS: readTemperature()
+    ITS-->>TSS: 42.3°C
+
+    TSS-->>TM: Success (42.3°C)
+```
+
+And the failure case:
+
+```mermaid
+sequenceDiagram
+    participant TM as TemperatureMonitor
+    participant TSS as TemperatureSensorService
+    participant ITS as ITemperatureSensor
+
+    TM->>TSS: readTemperature()
+    TSS->>ITS: readTemperature()
+    ITS-->>TSS: Timeout
+
+    TSS->>TSS: Wait
+    TSS->>ITS: readTemperature()
+    ITS-->>TSS: Timeout
+
+    TSS->>TSS: Wait
+    TSS->>ITS: readTemperature()
+    ITS-->>TSS: Timeout
+
+    Note over TSS: Retry budget exhausted
+
+    TSS-->>TM: Failure
+```
+
+This second diagram is especially useful because it shows a critical architectural principle:
+
+> **Retry does not eliminate failure. It attempts bounded recovery and then escalates when recovery fails.**
+
+For your GitHub article, I recommend keeping both diagrams: the class diagram explains *where responsibility lives*, while the sequence diagram explains *how retry behaves at runtime*.
+
+At this point the retry mechanism stops.
+
+The failure is escalated to the next architectural level.
+
+The higher level may then decide to:
+
+```text
+Mark sensor unavailable
+Trigger degraded mode
+Raise diagnostic event
+Notify operator
+Restart subsystem
+```
+Those actions should not be hidden inside the retry mechanism.
+
+## Responsibility Separation
+
+The final design creates clear ownership:
+
+```text
+TemperatureMonitor
+        |
+        | What should the system do?
+        v
+
+TemperatureSensorService
+        |
+        | Can this operation recover?
+        v
+
+ITemperatureSensor
+        |
+        | How do I access the sensor?
+        v
+
+TMP36Driver
+        |
+        | Hardware interaction
+        v
+
+Sensor
+```
+This separation is important because each layer answers a different question.
+
+| Layer | Main Question |
+|---|---|
+| `TemperatureMonitor` | What should the product do with the measurement or failure? |
+| `TemperatureSensorService` | Should and how should this failure be retried? |
+| `ITemperatureSensor` | What sensor operation is available? |
+| `TMP36Driver` | How is the physical sensor accessed? |
 ## CPP EXAMPLE
 ### Goal
 
