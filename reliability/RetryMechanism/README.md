@@ -574,6 +574,7 @@ readTemperature()
     ├── Yes → Wait → Retry
     │
     └── No  → Escalate
+```
 
 This reflects the central decision from the carousel: **separate business logic from recovery policy.
 
