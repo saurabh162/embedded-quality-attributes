@@ -610,6 +610,40 @@ HardwareFault       → Do not repeatedly retry
 ```
 The important architectural point is that retry behavior becomes an **explicit policy**, rather than an accidental loop buried in application code.
 
+#### `ITemperatureSensor`
+
+This remains the HAL abstraction introduced in the previous topic.
+
+```cpp
+class ITemperatureSensor
+{
+public:
+    virtual SensorResult readTemperature() = 0;
+    virtual ~ITemperatureSensor() = default;
+};
+```
+The retry layer still does not know whether the actual sensor is:
+
+-TMP36
+-TMP117
+-A future sensor
+-A test double
+
+So the HAL continues to protect the upper layers from hardware-specific details.
+
+#### `TMP36Driver`
+
+TMP36Driver handles hardware communication.
+
+Its job is to:
+
+- Access the ADC or hardware interface
+- Perform the sensor-specific operation
+- Detect low-level failures
+- Convert those failures into a meaningful `SensorError`
+
+It should normally report the failure rather than decide the complete system recovery policy.
+
 ## CPP EXAMPLE
 ### Goal
 
