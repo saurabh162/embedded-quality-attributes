@@ -925,8 +925,912 @@ without mixing recovery logic into unrelated layers.
 
 
 ## CPP EXAMPLE
-### Goal
 
+### Goal
+The goal of this example is to demonstrate how a **bounded Retry policy** can recover from transient sensor failures without spreading recovery logic throughout the application.
+
+In the previous HAL example, the `TemperatureMonitor` was isolated from the concrete sensor implementation through the `ITemperatureSensor` interface.
+
+For Retry, we extend that architecture:
+
+```text
+TemperatureMonitor
+        |
+        v
+TemperatureSensorService
+        |
+        v
+ITemperatureSensor
+        ^
+        |
+   TMP36Driver
+```
+
+Each component has a clear responsibility:
+
+| Component | Responsibility |
+|---|---|
+| `TemperatureMonitor` | Application behavior |
+| `TemperatureSensorService` | Retry and recovery policy |
+| `ITemperatureSensor` | Hardware abstraction |
+| `TMP36Driver` | Hardware-specific communication |
+| `RetryPolicy` | Retry configuration |
+| `IDelay` | Platform-independent waiting mechanism |
+
+The important design decision is that Retry is **not implemented as an arbitrary loop inside the application or driver**.
+
+The recovery policy has a clear architectural owner: `TemperatureSensorService`.
+
+---
+
+### Step 1: Represent Sensor Errors
+
+A Retry mechanism needs to know **why** an operation failed.
+
+```cpp
+enum class SensorError
+{
+    None,
+    Timeout,
+    Busy,
+    CommunicationError,
+    InvalidData,
+    HardwareFault
+};
+```
+
+This allows the recovery layer to distinguish between potentially transient and non-retryable failures.
+
+For example:
+
+```text
+Timeout             -> Retry
+Busy                -> Retry
+CommunicationError  -> Retry
+HardwareFault       -> Do not retry
+```
+
+The exact classification should depend on the failure model of the real sensor and system.
+
+---
+
+### Step 2: Return an Explicit Sensor Result
+
+The original HAL example returned only a temperature value.
+
+```cpp
+float readTemperature();
+```
+
+For Retry, this is not enough.
+
+The recovery layer also needs information about whether the operation succeeded and, if not, why it failed.
+
+```cpp
+struct SensorResult
+{
+    bool success;
+    float temperature;
+    SensorError error;
+};
+```
+
+A successful operation might return:
+
+```cpp
+{
+    true,
+    42.3f,
+    SensorError::None
+}
+```
+
+A failed operation might return:
+
+```cpp
+{
+    false,
+    0.0f,
+    SensorError::Timeout
+}
+```
+
+This makes failure information explicit instead of encoding failures using special temperature values.
+
+---
+
+### Step 3: Extend the HAL Interface
+
+The HAL interface now returns `SensorResult`.
+
+```cpp
+class ITemperatureSensor
+{
+public:
+    virtual SensorResult readTemperature() = 0;
+    virtual ~ITemperatureSensor() = default;
+};
+```
+
+The application still remains independent of the concrete sensor implementation.
+
+The interface now additionally provides enough information for higher-level recovery decisions.
+
+---
+
+### Step 4: Define the Retry Policy
+
+The Retry configuration is represented separately from the Retry algorithm.
+
+```cpp
+struct RetryPolicy
+{
+    std::uint8_t maxAttempts;
+    std::uint32_t delayMs;
+};
+```
+
+Example:
+
+```cpp
+RetryPolicy retryPolicy{
+    3,
+    10
+};
+```
+
+This means:
+
+```text
+Maximum total attempts = 3
+Delay between attempts = 10 ms
+```
+
+`maxAttempts` includes the initial operation.
+
+Therefore:
+
+```text
+maxAttempts = 3
+```
+
+means:
+
+```text
+Attempt 1 -> Initial operation
+Attempt 2 -> Retry
+Attempt 3 -> Retry
+```
+
+Using `maxAttempts` instead of `numberOfRetries` avoids ambiguity about whether the initial attempt is included.
+
+---
+
+### Step 5: Abstract the Delay Mechanism
+
+Waiting between Retry attempts depends on the execution environment.
+
+A real embedded system might use:
+
+- An RTOS delay
+- A hardware timer
+- A platform-specific delay API
+
+Instead of coupling the Retry service directly to one of these mechanisms, the example introduces `IDelay`.
+
+```cpp
+class IDelay
+{
+public:
+    virtual void waitMs(std::uint32_t milliseconds) = 0;
+    virtual ~IDelay() = default;
+};
+```
+
+A platform implementation can then provide the actual delay:
+
+```cpp
+class PlatformDelay : public IDelay
+{
+public:
+    void waitMs(std::uint32_t milliseconds) override
+    {
+        // Replace with target-specific delay implementation.
+        (void)milliseconds;
+    }
+};
+```
+
+For example, a real target could internally use an RTOS or MCU-specific timing function.
+
+This also makes Retry testing easier because tests do not need to perform real delays.
+
+---
+
+### Step 6: Introduce the TemperatureSensorService
+
+`TemperatureSensorService` is responsible for applying the recovery policy.
+
+```cpp
+class TemperatureSensorService
+{
+public:
+    TemperatureSensorService(
+        ITemperatureSensor& sensor,
+        IDelay& delay,
+        RetryPolicy retryPolicy);
+
+    SensorResult readTemperature();
+
+private:
+    bool isRetryable(SensorError error) const;
+
+    ITemperatureSensor& sensor_;
+    IDelay& delay_;
+    RetryPolicy retryPolicy_;
+};
+```
+
+Its dependencies are explicit:
+
+```text
+TemperatureSensorService
+        |
+        +---- ITemperatureSensor
+        |
+        +---- IDelay
+        |
+        +---- RetryPolicy
+```
+
+The service knows **how recovery should be attempted**, but it does not know the hardware-specific details of the sensor.
+
+---
+
+### Step 7: Implement the Retry Algorithm
+
+The core Retry logic is implemented inside `TemperatureSensorService`.
+
+```cpp
+SensorResult TemperatureSensorService::readTemperature()
+{
+    SensorResult result{
+        false,
+        0.0f,
+        SensorError::HardwareFault
+    };
+
+    for (std::uint8_t attempt = 1;
+         attempt <= retryPolicy_.maxAttempts;
+         ++attempt)
+    {
+        result = sensor_.readTemperature();
+
+        if (result.success)
+        {
+            return result;
+        }
+
+        if (!isRetryable(result.error))
+        {
+            return result;
+        }
+
+        if (attempt < retryPolicy_.maxAttempts)
+        {
+            delay_.waitMs(retryPolicy_.delayMs);
+        }
+    }
+
+    return result;
+}
+```
+
+The execution flow is:
+
+```text
+Read Sensor
+     |
+     v
+ Success? ---- Yes ----> Return measurement
+     |
+     No
+     |
+     v
+ Retryable? --- No ----> Return failure
+     |
+     Yes
+     |
+     v
+Attempts remaining?
+     |
+     +---- No ----------> Return failure
+     |
+     Yes
+     |
+     v
+    Wait
+     |
+     v
+Retry
+```
+
+The important point is that Retry is **bounded**.
+
+The software cannot remain indefinitely inside the Retry loop.
+
+---
+
+### Step 8: Retry Only Appropriate Failures
+
+Not every failure should automatically trigger another attempt.
+
+The example uses `isRetryable()` to classify failures.
+
+```cpp
+bool TemperatureSensorService::isRetryable(
+    SensorError error) const
+{
+    switch (error)
+    {
+        case SensorError::Timeout:
+        case SensorError::Busy:
+        case SensorError::CommunicationError:
+            return true;
+
+        case SensorError::None:
+        case SensorError::InvalidData:
+        case SensorError::HardwareFault:
+            return false;
+    }
+
+    return false;
+}
+```
+
+For example:
+
+```text
+Timeout
+    |
+    v
+Retry
+
+HardwareFault
+    |
+    v
+Do not retry
+    |
+    v
+Return failure
+```
+
+This prevents the system from wasting its Retry budget on failures where another immediate attempt is unlikely to help.
+
+Retry is therefore **selective**, not automatic for every error.
+
+---
+
+### Step 9: Keep Retry Out of the Application
+
+`TemperatureMonitor` uses `TemperatureSensorService`.
+
+```cpp
+void TemperatureMonitor::monitor()
+{
+    SensorResult result =
+        sensorService_.readTemperature();
+
+    if (!result.success)
+    {
+        handleSensorFailure(result.error);
+        return;
+    }
+
+    // Process valid measurement...
+}
+```
+
+Notice what the application does not contain:
+
+```text
+Retry counters
+Retry loops
+Delay handling
+Transient-error classification
+```
+
+The application asks for a measurement.
+
+The service handles operation-level recovery.
+
+If recovery fails, the failure is returned to the application for higher-level handling.
+
+---
+
+### Step 10: Connect the Components
+
+The concrete components are connected in `main.cpp`.
+
+```cpp
+int main()
+{
+    TMP36Driver sensor;
+
+    PlatformDelay delay;
+
+    RetryPolicy retryPolicy{
+        3,
+        10
+    };
+
+    TemperatureSensorService sensorService(
+        sensor,
+        delay,
+        retryPolicy);
+
+    TemperatureMonitor monitor(
+        sensorService);
+
+    monitor.monitor();
+
+    return 0;
+}
+```
+
+The resulting dependency structure is:
+
+```text
+TemperatureMonitor
+        |
+        v
+TemperatureSensorService
+        |
+        +------ RetryPolicy
+        |
+        +------ IDelay
+        |          ^
+        |          |
+        |     PlatformDelay
+        |
+        v
+ITemperatureSensor
+        ^
+        |
+   TMP36Driver
+```
+
+`main()` acts as the **composition root** where the concrete dependencies are created and connected.
+
+---
+
+### Testing Transient Failures
+
+Because the service depends on `ITemperatureSensor`, a test implementation can simulate failures without real hardware.
+
+For example:
+
+```cpp
+class MockTransientFailureSensor
+    : public ITemperatureSensor
+{
+public:
+    SensorResult readTemperature() override
+    {
+        ++attemptCount_;
+
+        if (attemptCount_ < 3)
+        {
+            return {
+                false,
+                0.0f,
+                SensorError::Timeout
+            };
+        }
+
+        return {
+            true,
+            42.3f,
+            SensorError::None
+        };
+    }
+
+private:
+    std::uint8_t attemptCount_{0};
+};
+```
+
+The simulated execution becomes:
+
+```text
+Attempt 1 -> Timeout
+Attempt 2 -> Timeout
+Attempt 3 -> 42.3 C
+```
+
+The operation succeeds within the configured Retry budget.
+
+This demonstrates the main purpose of Retry:
+
+> Recover automatically when a failure is temporary.
+
+---
+
+### Testing Persistent Failures
+
+A different test sensor can simulate a persistent timeout.
+
+```cpp
+class MockPersistentFailureSensor
+    : public ITemperatureSensor
+{
+public:
+    SensorResult readTemperature() override
+    {
+        return {
+            false,
+            0.0f,
+            SensorError::Timeout
+        };
+    }
+};
+```
+
+With:
+
+```text
+maxAttempts = 3
+```
+
+the behavior becomes:
+
+```text
+Attempt 1 -> Timeout
+Attempt 2 -> Timeout
+Attempt 3 -> Timeout
+              |
+              v
+      Retry budget exhausted
+              |
+              v
+        Return failure
+```
+
+The Retry mechanism does not block indefinitely.
+
+The failure becomes visible to the higher architectural layer.
+
+---
+
+### Testing a Non-Retryable Failure
+
+A test sensor can also simulate a permanent hardware fault.
+
+```cpp
+class MockHardwareFailureSensor
+    : public ITemperatureSensor
+{
+public:
+    SensorResult readTemperature() override
+    {
+        return {
+            false,
+            0.0f,
+            SensorError::HardwareFault
+        };
+    }
+};
+```
+
+Because `HardwareFault` is classified as non-retryable:
+
+```text
+Attempt 1
+    |
+HardwareFault
+    |
+    v
+No Retry
+    |
+    v
+Return failure
+```
+
+Even when `maxAttempts` is configured as `3`, only one operation is attempted.
+
+This demonstrates that a good Retry policy is **selective as well as bounded**.
+
+---
+
+### Source Code Structure
+
+The example is divided into small components with clear responsibilities.
+
+```text
+src/
+├── SensorError.h
+├── SensorResult.h
+├── RetryPolicy.h
+├── ITemperatureSensor.h
+├── IDelay.h
+├── TMP36Driver.h
+├── PlatformDelay.h
+├── TemperatureSensorService.h
+├── TemperatureSensorService.cpp
+├── TemperatureMonitor.h
+├── TemperatureMonitor.cpp
+└── main.cpp
+```
+
+Test doubles are kept separately:
+
+```text
+tests/
+├── MockDelay.h
+├── MockTransientFailureSensor.h
+├── MockPersistentFailureSensor.h
+└── MockHardwareFailureSensor.h
+```
+
+This structure reflects the architecture itself:
+
+```text
+Application behavior
+        |
+        v
+TemperatureMonitor
+
+Recovery policy
+        |
+        v
+TemperatureSensorService
+
+Recovery configuration
+        |
+        v
+RetryPolicy
+
+Hardware abstraction
+        |
+        v
+ITemperatureSensor
+
+Hardware implementation
+        |
+        v
+TMP36Driver
+```
+
+---
+
+## Building the Example
+
+A `Makefile` is provided in the root directory.
+
+The project structure is:
+
+```text
+Retry/
+├── Makefile
+├── src/
+└── tests/
+```
+
+The Makefile uses `g++` and C++17.
+
+Compiler warnings are enabled using:
+
+```text
+-Wall -Wextra -Wpedantic
+```
+
+### Build
+
+Run:
+
+```bash
+make
+```
+
+This compiles the source files and creates:
+
+```text
+build/retry_example
+```
+
+---
+
+### Build and Run
+
+Run:
+
+```bash
+make run
+```
+
+This builds the executable if required and then executes:
+
+```text
+build/retry_example
+```
+
+---
+
+### Debug Build
+
+Run:
+
+```bash
+make debug
+```
+
+The debug build uses:
+
+```text
+-g -O0
+```
+
+This includes debugging information and disables optimization, making the executable easier to inspect with a debugger.
+
+---
+
+### Release Build
+
+Run:
+
+```bash
+make release
+```
+
+The release build adds:
+
+```text
+-O2 -DNDEBUG
+```
+
+to create an optimized build.
+
+---
+
+### Clean Build Files
+
+Run:
+
+```bash
+make clean
+```
+
+This removes the complete `build/` directory and generated files.
+
+---
+
+### Display Available Targets
+
+Run:
+
+```bash
+make help
+```
+
+Available targets are:
+
+```text
+make          Build the example
+make run      Build and run the example
+make debug    Build with debug information
+make release  Build optimized version
+make clean    Remove generated build files
+make help     Display available targets
+```
+
+---
+
+### Makefile
+
+The example uses the following Makefile:
+
+```makefile
+CXX := g++
+
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic
+
+SRC_DIR := src
+BUILD_DIR := build
+
+TARGET := $(BUILD_DIR)/retry_example
+
+SOURCES := \
+	$(SRC_DIR)/main.cpp \
+	$(SRC_DIR)/TemperatureSensorService.cpp \
+	$(SRC_DIR)/TemperatureMonitor.cpp
+
+OBJECTS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(TARGET)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $< -o $@
+
+run: $(TARGET)
+	./$(TARGET)
+
+debug: CXXFLAGS += -g -O0
+debug: clean $(TARGET)
+
+release: CXXFLAGS += -O2 -DNDEBUG
+release: clean $(TARGET)
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+help:
+	@echo "Available targets:"
+	@echo "  make          Build the example"
+	@echo "  make run      Build and run"
+	@echo "  make debug    Build with debug information"
+	@echo "  make release  Build optimized version"
+	@echo "  make clean    Remove generated files"
+	@echo "  make help     Show available targets"
+
+.PHONY: all run debug release clean help
+```
+
+> **Note:** Commands under Makefile targets must begin with a tab character, not spaces.
+
+---
+
+### Why This Example Is Intentionally Simple
+
+The implementation deliberately avoids:
+
+- Dynamic memory allocation
+- Exceptions
+- Complex templates
+- Generic Retry frameworks
+- Unnecessary runtime abstractions
+
+The purpose is not to build a universal Retry library.
+
+The purpose is to demonstrate an architectural decision:
+
+> **Separate application behavior, hardware access, and recovery policy.**
+
+For a resource-constrained embedded system, a small statically configured Retry mechanism may be more appropriate than a highly generic framework.
+
+---
+
+### Key Takeaway
+
+The implementation turns Retry from an arbitrary loop into an explicit recovery policy.
+
+```text
+Failure
+   |
+   v
+Is it retryable?
+   |
+   v
+Is recovery budget available?
+   |
+   v
+Retry
+   |
+   +---- Success ------> Continue
+   |
+   +---- Exhausted ----> Escalate
+```
+
+The resulting design keeps Retry:
+
+**Selective -> Bounded -> Observable -> Escalated**
+
+In this example, the implementation demonstrates the **selective**, **bounded**, and **escalation** aspects directly.
+
+Observability can be added through diagnostic counters, logging, or telemetry so that repeated retries do not silently hide a degrading sensor or communication path.
 
 
 
