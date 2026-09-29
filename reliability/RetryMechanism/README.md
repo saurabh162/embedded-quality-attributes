@@ -1832,13 +1832,1017 @@ In this example, the implementation demonstrates the **selective**, **bounded**,
 
 Observability can be added through diagnostic counters, logging, or telemetry so that repeated retries do not silently hide a degrading sensor or communication path.
 
+## Benefits
 
+A well-designed Retry mechanism improves the resilience of an embedded system by allowing it to recover automatically from **transient failures**.
 
-## Benefits 
+The important point is that Retry does not prevent failures from occurring.
 
-## Tradeoffs 
+Instead, it provides a controlled recovery strategy when repeating an operation has a reasonable chance of succeeding.
+
+---
+
+### 1. Recovery from Transient Failures
+
+Real embedded systems occasionally experience temporary failures such as:
+
+- Communication timeouts
+- Bus contention
+- Electrical disturbances
+- Temporarily busy peripherals
+- Short-lived communication errors
+
+Consider our temperature monitoring device:
+
+```text
+Attempt 1 -> Timeout
+Attempt 2 -> 42.3 C
+```
+
+Without Retry:
+
+```text
+Timeout
+   |
+   v
+Measurement Failure
+```
+
+With Retry:
+
+```text
+Timeout
+   |
+   v
+Retry
+   |
+   v
+42.3 C
+   |
+   v
+Continue Operation
+```
+
+A temporary problem does not unnecessarily become a system-level failure.
+
+This improves the system's ability to continue operating in the presence of short-lived faults.
+
+---
+
+### 2. Improved System Resilience
+
+A robust system should tolerate failures that can reasonably be recovered from.
+
+Without a recovery strategy, even a single temporary communication problem may propagate upward:
+
+```text
+Temporary Sensor Failure
+          |
+          v
+Measurement Failure
+          |
+          v
+Application Error
+          |
+          v
+Possible System-Level Recovery
+```
+
+Retry can stop that propagation when recovery succeeds:
+
+```text
+Temporary Sensor Failure
+          |
+          v
+        Retry
+          |
+          v
+       Success
+          |
+          v
+   Normal Operation
+```
+
+This prevents unnecessary transitions into degraded or error states.
+
+---
+
+### 3. Controlled Recovery Behavior
+
+Retry behavior is defined through an explicit policy.
+
+For example:
+
+```cpp
+RetryPolicy retryPolicy{
+    3,      // Maximum attempts
+    10      // Delay in milliseconds
+};
+```
+
+The recovery behavior therefore has known limits.
+
+Instead of:
+
+```text
+Retry until something works
+```
+
+the architecture defines:
+
+```text
+Maximum attempts
+       +
+Delay between attempts
+       +
+Retryable failures
+       +
+Failure escalation
+```
+
+This makes recovery behavior easier to understand, review, test, and maintain.
+
+---
+
+### 4. Prevents Infinite Retry Loops
+
+An unbounded Retry loop can cause software to remain stuck indefinitely.
+
+For example:
+
+```cpp
+while (!sensor.readTemperature().success)
+{
+    // Retry forever
+}
+```
+
+If the sensor has permanently failed, the operation may never finish.
+
+A bounded Retry policy prevents this.
+
+```text
+Attempt 1 -> Fail
+Attempt 2 -> Fail
+Attempt 3 -> Fail
+              |
+              v
+      Retry Budget Exhausted
+              |
+              v
+         Escalate
+```
+
+The system gets a limited opportunity to recover while still guaranteeing that persistent failures eventually become visible.
+
+---
+
+### 5. Selective Failure Recovery
+
+Not every failure should be retried.
+
+The example distinguishes between potentially transient and non-retryable failures.
+
+```text
+Timeout             -> Retry
+Busy                -> Retry
+CommunicationError  -> Retry
+
+HardwareFault       -> Do not retry
+```
+
+This prevents the system from repeatedly executing operations that are unlikely to recover.
+
+The Retry mechanism therefore becomes a **failure-aware recovery policy**, rather than simply repeating every failed operation.
+
+---
+
+### 6. Separation of Application and Recovery Logic
+
+Without a dedicated recovery component, Retry logic can spread throughout the application:
+
+```text
+TemperatureMonitor
+    |
+    +-- Retry counter
+    +-- Delay handling
+    +-- Error classification
+    +-- Retry loop
+    +-- Application logic
+```
+
+In our architecture:
+
+```text
+TemperatureMonitor
+        |
+        v
+TemperatureSensorService
+        |
+        v
+ITemperatureSensor
+```
+
+responsibilities remain separated.
+
+`TemperatureMonitor` handles application behavior.
+
+`TemperatureSensorService` handles operation-level recovery.
+
+`TMP36Driver` handles hardware communication.
+
+This makes each component easier to understand and evolve independently.
+
+---
+
+### 7. Consistent Recovery Policy
+
+If Retry logic is implemented separately by different application components, recovery behavior can become inconsistent.
+
+For example:
+
+```text
+TemperatureMonitor -> Retry 3 times
+
+DiagnosticModule   -> Retry 5 times
+
+CalibrationModule  -> Retry forever
+```
+
+Centralizing the policy in `TemperatureSensorService` avoids this problem.
+
+```text
+Application Components
+        |
+        v
+TemperatureSensorService
+        |
+        v
+Common Retry Policy
+```
+
+The system now has one controlled place where sensor recovery behavior is defined.
+
+---
+
+### 8. Improved Testability
+
+Because Retry is isolated inside `TemperatureSensorService`, recovery scenarios can be tested independently from real hardware.
+
+A mock sensor can simulate:
+
+```text
+Timeout -> Success
+```
+
+or:
+
+```text
+Timeout -> Timeout -> Timeout
+```
+
+or:
+
+```text
+HardwareFault
+```
+
+This allows tests to verify important reliability scenarios such as:
+
+- Successful recovery after a transient failure
+- Correct number of Retry attempts
+- Retry delay invocation
+- Retry exhaustion
+- Immediate handling of non-retryable failures
+
+These scenarios can be tested deterministically without waiting for real hardware faults to occur.
+
+---
+
+### 9. Supports Fault Injection
+
+The HAL introduced in the previous architecture already allows the real sensor to be replaced with a test implementation.
+
+Retry builds on that architecture.
+
+For example:
+
+```text
+MockTransientFailureSensor
+        |
+        v
+Timeout
+        |
+        v
+Timeout
+        |
+        v
+Success
+```
+
+The architecture therefore allows engineers to deliberately inject failure sequences and verify whether recovery behaves as intended.
+
+This is particularly useful when testing reliability behavior that may otherwise be difficult to reproduce on physical hardware.
+
+---
+
+### 10. Failure Escalation Remains Possible
+
+Retry should not hide failures indefinitely.
+
+When the recovery budget is exhausted:
+
+```text
+Retry
+  |
+  v
+Retry
+  |
+  v
+Retry
+  |
+  v
+Still Failing
+  |
+  v
+Escalate
+```
+
+the failure is returned to the higher architectural layer.
+
+The application can then decide whether to:
+
+- Mark the sensor unavailable
+- Enter degraded operation
+- Raise a diagnostic event
+- Notify the operator
+- Trigger another system-level recovery mechanism
+
+This creates a clear recovery hierarchy:
+
+```text
+Operation fails
+      |
+      v
+Local Retry
+      |
+      +---- Recovered ----> Continue
+      |
+      +---- Not Recovered
+                |
+                v
+         Higher-Level
+         Fault Handling
+```
+
+Retry therefore handles only the failures it is designed to recover from.
+
+---
+
+### 11. Retry Can Be Made Observable
+
+A production system can expose information such as:
+
+```text
+Retry attempts
+Recovered operations
+Retry exhaustion count
+Last Retry reason
+```
+
+This is important because a successful operation does not necessarily mean the subsystem is healthy.
+
+For example:
+
+```text
+100 successful measurements
+```
+
+may look healthy.
+
+But:
+
+```text
+100 successful measurements
+90 required Retry
+```
+
+may indicate a degrading communication path or sensor.
+
+Observability prevents successful retries from silently hiding an underlying reliability problem.
+
+---
+
+### Benefits Summary
+
+| Benefit | How Retry Helps |
+|---|---|
+| Transient fault recovery | Repeats operations that have a reasonable chance of succeeding |
+| Improved resilience | Temporary failures do not immediately become system failures |
+| Controlled recovery | Retry count and delay are explicitly defined |
+| Bounded execution | Persistent failures cannot cause infinite Retry loops |
+| Selective recovery | Only appropriate failures are retried |
+| Separation of concerns | Recovery logic remains outside application logic |
+| Consistent behavior | Recovery policy is centralized |
+| Improved testability | Failure sequences can be reproduced deterministically |
+| Fault injection | Transient and persistent failures can be simulated |
+| Failure escalation | Unrecoverable failures remain visible |
+| Observability | Repeated recovery can be monitored and diagnosed |
+
+---
+
+### Key Takeaway
+
+Retry improves reliability when it gives a failed operation a **controlled opportunity to recover**.
+
+The goal is not:
+
+> Retry until the operation succeeds.
+
+The goal is:
+
+> Retry only when recovery is reasonable, within a defined recovery budget, and escalate when that budget is exhausted.
+
+A good Retry strategy is therefore:
+
+**Selective -> Bounded -> Observable -> Escalated**
+
+## Tradeoffs
+
+Retry can improve resilience, but recovery is not free.
+
+Every additional attempt consumes:
+
+- Time
+- CPU resources
+- Communication bandwidth
+- Energy
+- Hardware access
+
+Retry can also make failures harder to detect if recovery happens silently.
+
+The correct question is therefore not:
+
+> Should we use Retry?
+
+A better architecture question is:
+
+> Which failures should we retry, and how much recovery can the system safely afford?
+
+---
+
+### 1. Increased Response Latency
+
+Every Retry increases the time required to complete an operation.
+
+Assume:
+
+```text
+Sensor timeout = 20 ms
+Retry delay    = 10 ms
+Max attempts   = 3
+```
+
+A successful operation might normally require:
+
+```text
+20 ms or less
+```
+
+But a persistent failure can consume approximately:
+
+```text
+Attempt 1       20 ms
+Retry delay     10 ms
+Attempt 2       20 ms
+Retry delay     10 ms
+Attempt 3       20 ms
+                -----
+Total           80 ms
+```
+
+Retry therefore creates a direct trade-off:
+
+```text
+More Recovery Opportunities
+          |
+          +----> Potentially better Reliability
+          |
+          +----> Increased Worst-Case Latency
+```
+
+In real-time embedded systems, the Retry budget must fit inside the system's timing budget.
+
+---
+
+### 2. Impact on Real-Time Behavior
+
+Average execution time is not enough when designing a real-time system.
+
+The architecture must also consider the worst case.
+
+Without Retry:
+
+```text
+readTemperature()
+      |
+      +---- Maximum execution time
+```
+
+With Retry:
+
+```text
+Attempt
+   +
+Timeout
+   +
+Delay
+   +
+Attempt
+   +
+Timeout
+   +
+Delay
+   +
+Attempt
+```
+
+The worst-case execution time becomes larger.
+
+If other tasks depend on this operation, Retry may affect:
+
+- Task deadlines
+- Control-loop timing
+- Communication schedules
+- Display updates
+- Watchdog servicing
+- Other time-critical operations
+
+Retry policy must therefore be considered as part of the system's timing analysis.
+
+---
+
+### 3. Blocking Retry Can Delay Other Work
+
+The simple example uses:
+
+```cpp
+delay_.waitMs(retryPolicy_.delayMs);
+```
+
+Conceptually this means:
+
+```text
+Fail
+ |
+ v
+Wait
+ |
+ v
+Retry
+```
+
+Depending on how `waitMs()` is implemented, the calling execution context may be unavailable while recovery is in progress.
+
+In a simple system this may be acceptable.
+
+In a more timing-sensitive system, blocking Retry may interfere with other responsibilities.
+
+Alternative designs might use:
+
+- RTOS task delays
+- Timers
+- State machines
+- Event-driven Retry
+- Asynchronous operations
+
+These approaches can reduce blocking but introduce additional architectural complexity.
+
+---
+
+### 4. Additional CPU and Communication Load
+
+Each Retry repeats work.
+
+For a sensor transaction this may involve:
+
+```text
+Configure communication
+        |
+        v
+Start transaction
+        |
+        v
+Wait for response
+        |
+        v
+Process result
+```
+
+Repeated attempts therefore consume additional:
+
+- CPU cycles
+- Bus bandwidth
+- Peripheral time
+- Driver activity
+
+For a single temperature sensor this cost may be small.
+
+But if many components use Retry simultaneously, the cumulative effect can become significant.
+
+---
+
+### 5. Increased Energy Consumption
+
+Retry also means additional hardware activity.
+
+For battery-powered systems:
+
+```text
+More attempts
+     |
+     v
+More CPU activity
+     +
+More peripheral activity
+     +
+More communication
+     |
+     v
+Higher energy consumption
+```
+
+A Retry strategy appropriate for a mains-powered industrial controller may therefore not be appropriate for a low-power wireless sensor.
+
+Reliability and power consumption may require different compromises.
+
+---
+
+### 6. Retry Can Hide Degrading Hardware
+
+Consider:
+
+```text
+Read 1 -> Timeout
+Retry  -> Success
+```
+
+From the application's perspective:
+
+```text
+Measurement successful
+```
+
+Now suppose this starts happening repeatedly:
+
+```text
+Measurement 1 -> Retry -> Success
+Measurement 2 -> Retry -> Success
+Measurement 3 -> Retry -> Success
+Measurement 4 -> Retry -> Success
+...
+```
+
+The system still appears functional, but the communication path may be degrading.
+
+If Retry is invisible, an important diagnostic signal is lost.
+
+This is why Retry should be **observable**.
+
+Production systems may need:
+
+- Retry counters
+- Diagnostic events
+- Failure history
+- Telemetry
+- Threshold-based warnings
+
+Retry should recover from transient failures without hiding persistent degradation.
+
+---
+
+### 7. Incorrect Failure Classification
+
+The Retry policy depends on correctly deciding which failures may be transient.
+
+Suppose:
+
+```text
+HardwareFault -> incorrectly classified as Retryable
+```
+
+The system may repeatedly perform an operation that cannot recover.
+
+Alternatively:
+
+```text
+Temporary Busy condition -> incorrectly classified as Permanent
+```
+
+the system may unnecessarily escalate a recoverable fault.
+
+Therefore:
+
+> Retry classification should be based on the actual failure model of the device.
+
+It should not be guessed simply because an operation returned an error.
+
+---
+
+### 8. Retry Can Make an Overloaded System Worse
+
+Not every temporary failure benefits from immediate Retry.
+
+Consider a shared communication resource:
+
+```text
+Bus overloaded
+     |
+     v
+Transaction fails
+     |
+     v
+Immediate Retry
+     |
+     v
+More bus traffic
+     |
+     v
+More failures
+```
+
+Multiple components retrying aggressively can amplify an overload condition.
+
+In such systems, the policy may require:
+
+- Longer delays
+- Backoff
+- Jitter
+- Centralized scheduling
+- Rate limiting
+
+The simple fixed-delay policy used in this example is intentionally appropriate only for a simple embedded scenario.
+
+---
+
+### 9. Choosing the Retry Count Is an Engineering Decision
+
+There is no universally correct Retry count.
+
+For example:
+
+```text
+1 attempt
+```
+
+provides little recovery opportunity.
+
+But:
+
+```text
+100 attempts
+```
+
+may create unacceptable latency.
+
+The appropriate value depends on:
+
+- Failure characteristics
+- Operation timeout
+- Real-time deadline
+- Safety requirements
+- Availability requirements
+- Power budget
+- Communication constraints
+
+Therefore:
+
+```text
+Retry Count
+    +
+Retry Delay
+    +
+Operation Timeout
+```
+
+should be treated as architecture parameters rather than arbitrary constants.
+
+---
+
+### 10. Retry Adds Design and Testing Complexity
+
+Without Retry:
+
+```text
+Application
+    |
+    v
+Sensor
+```
+
+With Retry:
+
+```text
+Application
+    |
+    v
+Sensor Service
+    |
+    +---- Retry Policy
+    |
+    +---- Delay
+    |
+    v
+Sensor
+```
+
+Additional design decisions are required:
+
+- Which errors are retryable?
+- How many attempts are allowed?
+- What delay should be used?
+- Should Retry block?
+- What should be logged?
+- What happens after exhaustion?
+
+Tests must also cover more execution paths.
+
+For example:
+
+```text
+Immediate success
+Transient failure -> success
+Multiple transient failures -> success
+Retry exhaustion
+Non-retryable failure
+```
+
+The increased complexity is justified only when transient failures are a realistic system concern.
+
+---
+
+### 11. Retry Is Not a Replacement for Root-Cause Correction
+
+A common architectural mistake is using Retry to compensate for an underlying defect.
+
+For example:
+
+```text
+Frequent communication failures
+          |
+          v
+Increase Retry count
+```
+
+may make the symptom less visible without solving the actual problem.
+
+The root cause could instead be:
+
+- Electrical integrity problems
+- Incorrect timing
+- Driver defects
+- Bus configuration problems
+- Hardware defects
+- Resource contention
+
+Retry should handle **expected transient failures**.
+
+It should not become a mechanism for hiding systematic design problems.
+
+---
+
+### When Retry Is a Good Choice
+
+Retry is useful when:
+
+- The operation can fail transiently
+- Repeating the operation has a reasonable chance of success
+- The operation is safe to repeat
+- Recovery can fit within the timing budget
+- Retry attempts can be bounded
+- Persistent failures can be detected and escalated
+
+Typical embedded examples include:
+
+```text
+Temporary sensor timeout
+Peripheral busy condition
+Transient communication error
+Short-lived bus contention
+```
+
+---
+
+### When Retry Might Be the Wrong Choice
+
+Retry may be inappropriate when:
+
+- The failure is known to be permanent
+- The operation is not safe to repeat
+- Timing deadlines cannot tolerate additional attempts
+- Retrying increases system overload
+- Failure requires immediate higher-level handling
+- Repeated execution could cause unintended physical effects
+
+For example, operations that trigger physical actions may require special consideration before being repeated.
+
+The system must know whether the failed operation was:
+
+```text
+Not executed
+```
+
+or:
+
+```text
+Executed, but acknowledgement was lost
+```
+
+before deciding that repeating it is safe.
+
+---
 
 ### Trade-off Summary
 
+| Benefit | Cost / Risk |
+|---|---|
+| Recover from transient faults | Increased response latency |
+| More resilient operation | Larger worst-case execution time |
+| Automatic recovery | Additional CPU and bus activity |
+| More recovery opportunities | Higher energy consumption |
+| Centralized recovery policy | Additional architecture complexity |
+| Transparent recovery | Can hide degrading hardware |
+| Configurable Retry behavior | Parameters require careful engineering |
+| Improved availability | Aggressive Retry can increase system load |
+
+---
+
+### Quality Attribute Trade-offs
+
+Retry primarily improves **Reliability**, but it also affects other quality attributes.
+
+```text
+                    Retry
+                      |
+        +-------------+-------------+
+        |             |             |
+        v             v             v
+   Reliability    Performance   Testability
+        +             -             +
+```
+
+#### Reliability
+
+Potential improvement because transient faults can be recovered automatically.
+
+#### Performance
+
+Potential degradation because additional attempts increase latency, CPU usage, and communication activity.
+
+#### Testability
+
+Potential improvement when the recovery policy is isolated and failures can be injected deterministically.
+
+#### Maintainability
+
+Can improve when Retry policy is centralized, but excessive recovery abstractions can also increase complexity.
+
+This demonstrates an important architecture principle:
+
+> Improving one quality attribute can affect several others.
+
+Architecture is therefore not about maximizing one attribute independently.
+
+It is about choosing an acceptable balance for the system.
+
+---
+
 ### Key Takeaway
+
+Retry is valuable when failure is **temporary and recovery is realistic**.
+
+But every Retry consumes part of the system's:
+
+```text
+Timing budget
+Resource budget
+Energy budget
+Complexity budget
+```
+
+A good Retry design therefore asks:
+
+> Which failures are transient?
+
+and:
+
+> How much recovery can the system safely afford?
+
+The objective is not maximum Retry.
+
+The objective is **controlled recovery**.
+
+That is why a robust Retry strategy remains:
+
+**Selective -> Bounded -> Observable -> Escalated**
 
