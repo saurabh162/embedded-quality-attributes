@@ -2006,7 +2006,7 @@ The example distinguishes between potentially transient and non-retryable failur
 ```text
 Timeout             -> Retry
 Busy                -> Retry
-Communication Error  -> Retry
+CommunicationError  -> Retry
 
 HardwareFault       -> Do not retry
 ```
@@ -2098,13 +2098,13 @@ Timeout -> Success
 or:
 
 ```text
-Timeout -> Timeout -> Timeout
+SensorResult -> SensorError -> None
 ```
 
 or:
 
 ```text
-HardwareFault
+SensorResult -> SensorError -> HardwareFault
 ```
 
 This allows tests to verify important reliability scenarios such as:
