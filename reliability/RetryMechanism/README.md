@@ -2006,7 +2006,7 @@ The example distinguishes between potentially transient and non-retryable failur
 ```text
 Timeout             -> Retry
 Busy                -> Retry
-CommunicationError  -> Retry
+Communication Error  -> Retry
 
 HardwareFault       -> Do not retry
 ```
