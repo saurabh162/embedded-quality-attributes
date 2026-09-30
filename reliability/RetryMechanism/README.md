@@ -2092,13 +2092,13 @@ Because Retry is isolated inside `TemperatureSensorService`, recovery scenarios 
 A mock sensor can simulate:
 
 ```text
-Timeout -> Success
+SensorResult -> SensorError -> None
 ```
 
 or:
 
 ```text
-SensorResult -> SensorError -> None
+SensorResult -> SensorError -> Timeout
 ```
 
 or:
