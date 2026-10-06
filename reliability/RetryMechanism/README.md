@@ -154,7 +154,7 @@ Neither extreme distinguishes between a **transient failure** and a **persistent
 
 The architectural problem is not simply:
 
-> “The sensor read failed.”
+> **The sensor read failed.**
 
 Failures are expected in real embedded systems.
 
