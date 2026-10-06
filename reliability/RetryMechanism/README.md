@@ -308,7 +308,7 @@ This separation is important.
 We do **not** want code such as this spread throughout application logic:
 
 ```cpp
-if (sensor.readTemperature() fails)
+if (sensor.readTemperature() == fails)
 {
     delay();
     retry();
