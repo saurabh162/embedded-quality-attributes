@@ -242,6 +242,7 @@ The retry mechanism now makes several decisions explicitly:
 2.	**How many attempts are allowed?** 
 3.	**How long should the system wait between attempts?** 
 4.	**What happens when all attempts fail?** 
+
 This turns retry from an accidental loop into a deliberate reliability policy.
 
 ### Retry Should Be Selective
