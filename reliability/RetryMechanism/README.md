@@ -118,14 +118,19 @@ Now the system behaves like:
 ```text
 Read
   |
+  ▼
 Fail
   |
+  ▼
 Retry
   |
+  ▼
 Fail
   |
+  ▼
 Retry
   |
+  ▼
 ...
 ```
 
