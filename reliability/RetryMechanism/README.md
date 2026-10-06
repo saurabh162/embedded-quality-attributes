@@ -420,7 +420,7 @@ Therefore:
 
 > **The retry budget must fit inside the system's timing budget.**
 
-This is exactly the kind of trade-off we want your GitHub repository to teach: the architecture decision is not simply *"use Retry."* It is *"how much recovery can this system safely afford?"*
+The architecture decision is not simply *"use Retry."* It is *"how much recovery can this system safely afford?"*
 
 ---
 
