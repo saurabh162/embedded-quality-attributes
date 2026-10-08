@@ -540,7 +540,7 @@ That keeps recovery policy out of the business logic.
 
 This is the key new architectural component.
 
-It sits between:
+It sits between the application and the HAL:
 
 ```text
 TemperatureMonitor
@@ -548,15 +548,16 @@ TemperatureMonitor
 TemperatureSensorService
         ↓
 ITemperatureSensor
+```
 
 Its responsibilities include:
 
-Calling the sensor
-Examining the returned error
-Deciding whether the failure is retryable
-Waiting between attempts
-Limiting the number of attempts
-Returning success or an exhausted failure to the application
+- Calling the sensor
+- Examining the returned error
+- Deciding whether the failure is retryable
+- Waiting between attempts
+- Limiting the number of attempts
+- Returning success or an exhausted failure to the application
 
 Conceptually:
 
@@ -580,7 +581,7 @@ readTemperature()
     └── No  → Escalate
 ```
 
-This reflects the central decision from the carousel: **separate business logic from recovery policy.
+This reflects the central decision from the carousel: **separate business logic from recovery policy**.
 
 ---
 
