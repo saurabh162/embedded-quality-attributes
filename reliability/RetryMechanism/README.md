@@ -751,8 +751,6 @@ This gives every layer a clear reason to change.
 
 ## Retry Sequence
 
-For the repository, I also recommend adding a small sequence diagram because retry is a **behavioral mechanism**, and the class diagram alone does not show the recovery flow very clearly.
-
 ```mermaid
 sequenceDiagram
     participant TM as TemperatureMonitor
@@ -801,7 +799,7 @@ This second diagram is especially useful because it shows a critical architectur
 
 > **Retry does not eliminate failure. It attempts bounded recovery and then escalates when recovery fails.**
 
-For your GitHub article, I recommend keeping both diagrams: the class diagram explains *where responsibility lives*, while the sequence diagram explains *how retry behaves at runtime*.
+The class diagram explains *where responsibility lives*, while the sequence diagram explains *how retry behaves at runtime*.
 
 At this point the retry mechanism stops.
 
@@ -894,8 +892,6 @@ TMP36Driver
 HAL solved **hardware dependency**.
 
 Retry now addresses **transient operational failure**.
-
-That progression is exactly the continuity we want across the series.
 
 ## Key Takeaway
 
